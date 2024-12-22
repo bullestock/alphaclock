@@ -4,6 +4,7 @@
 #include "hw.h"
 #include "nvs.h"
 #include "sntp.h"
+#include "stepper.h"
 
 #include <stdio.h>
 
@@ -65,10 +66,20 @@ void app_main(void)
     if (debug)
         run_console();        // never returns
 
+    printf("Starting app\n");
+    
     esp_log_level_set("esp_wifi", ESP_LOG_ERROR);
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
     // TODO
+    Stepper stepper(PIN_A1, PIN_A2, PIN_B1, PIN_B2);
+
+    while (1)
+    {
+        printf("step\n");
+        stepper.step(50, 10000);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }
 
 // Local Variables:
