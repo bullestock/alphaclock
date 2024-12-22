@@ -1,2 +1,2 @@
-idf_component_register(SRCS "alphaclock.cpp"
+idf_component_register(SRCS alphaclock.cpp connect.cpp console.cpp hw.cpp nvs.cpp sntp.cpp
                     INCLUDE_DIRS ".")
