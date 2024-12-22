@@ -1,0 +1,6 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Connector_Generic")(type "KiCad")(uri "${KIPRJMOD}/lib/Connector_Generic.kicad_sym")(options "")(descr ""))
+  (lib (name "Driver_Motor")(type "KiCad")(uri "${KIPRJMOD}/lib/Driver_Motor.kicad_sym")(options "")(descr ""))
+  (lib (name "ESP32_mini")(type "Legacy")(uri "${KIPRJMOD}/lib/ESP32_mini.lib")(options "")(descr ""))
+)
