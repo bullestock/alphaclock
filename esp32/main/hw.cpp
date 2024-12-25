@@ -11,6 +11,7 @@
 void init_hardware()
 {
     gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_INTR_DISABLE;
     // Outputs
     io_conf.mode = GPIO_MODE_OUTPUT;
     // bit mask of the pins that you want to set

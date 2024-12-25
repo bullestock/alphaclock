@@ -5,13 +5,10 @@
 class Stepper
 {
 public:
-    Stepper() = default;
+    Stepper();
 
-    void step(int nof_steps, int64_t delay_us);
+    void step(int nof_steps, uint64_t delay_us);
 
 private:
-    int current_phase = 0;
-    
-    void step(int phase);
+    bool timer_enabled = false;
 };
-            

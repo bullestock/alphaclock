@@ -76,11 +76,11 @@ void app_main(void)
 
     while (1)
     {
-        for (int i = 0; i < 5; ++i)
+        for (int i = 0; i < 10; ++i)
         {
-            int64_t delay = 1000 + i*2000;
+            int64_t delay = 1000 + (10 - i)*500;
             printf("step %d ms\n", int(delay/1000));
-            stepper.step(50, delay);
+            stepper.step(100, delay);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
