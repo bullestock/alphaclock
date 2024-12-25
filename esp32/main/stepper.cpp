@@ -5,19 +5,10 @@
 
 #include <esp_timer.h>
 
-Stepper::Stepper(gpio_num_t a1,
-                 gpio_num_t a2,
-                 gpio_num_t b1,
-                 gpio_num_t b2)
-    : pin_a1(a1),
-      pin_a2(a2),
-      pin_b1(b1),
-      pin_b2(b2)
-{
-}
-
 void Stepper::step(int nof_steps, int64_t delay_us)
 {
+    ESP_ERROR_CHECK(gpio_set_level(PIN_EN, 1));
+
     int steps_left = abs(nof_steps);
 
     const bool is_forward = nof_steps > 0;
@@ -47,34 +38,35 @@ void Stepper::step(int nof_steps, int64_t delay_us)
         }
         vTaskDelay(1);
     }
+    ESP_ERROR_CHECK(gpio_set_level(PIN_EN, 0));
 }
 
 void Stepper::step(int phase)
 {
     switch (phase) {
     case 0:  // 1010
-        ESP_ERROR_CHECK(gpio_set_level(pin_a1, 1));
-        ESP_ERROR_CHECK(gpio_set_level(pin_a2, 0));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b1, 1));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b2, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A1, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A2, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B1, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B2, 0));
         break;
     case 1:  // 0110
-        ESP_ERROR_CHECK(gpio_set_level(pin_a1, 0));
-        ESP_ERROR_CHECK(gpio_set_level(pin_a2, 1));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b1, 1));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b2, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A1, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A2, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B1, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B2, 0));
         break;
     case 2:  //0101
-        ESP_ERROR_CHECK(gpio_set_level(pin_a1, 0));
-        ESP_ERROR_CHECK(gpio_set_level(pin_a2, 1));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b1, 0));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b2, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A1, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A2, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B1, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B2, 1));
         break;
     case 3:  //1001
-        ESP_ERROR_CHECK(gpio_set_level(pin_a1, 1));
-        ESP_ERROR_CHECK(gpio_set_level(pin_a2, 0));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b1, 0));
-        ESP_ERROR_CHECK(gpio_set_level(pin_b2, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A1, 1));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_A2, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B1, 0));
+        ESP_ERROR_CHECK(gpio_set_level(PIN_B2, 1));
         break;
     }
 }

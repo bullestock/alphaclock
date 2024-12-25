@@ -19,7 +19,7 @@ void app_main(void)
     init_hardware();
 
     const auto app_desc = esp_app_get_description();
-    printf("BigBro v %s\n", app_desc->version);
+    printf("AlphaClock v %s\n", app_desc->version);
 
     init_nvs();
 
@@ -72,13 +72,17 @@ void app_main(void)
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
     // TODO
-    Stepper stepper(PIN_A1, PIN_A2, PIN_B1, PIN_B2);
+    Stepper stepper;
 
     while (1)
     {
-        printf("step\n");
-        stepper.step(50, 10000);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        for (int i = 0; i < 5; ++i)
+        {
+            int64_t delay = 1000 + i*2000;
+            printf("step %d ms\n", int(delay/1000));
+            stepper.step(50, delay);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
     }
 }
 
