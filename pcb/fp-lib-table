@@ -1,3 +1,10 @@
 (fp_lib_table
-  (lib (name D1_mini)(type KiCad)(uri "$(KIPRJMOD)/lib/D1_mini.pretty")(options "")(descr ""))
+  (version 7)
+  (lib (name "Package_DIP")(type "KiCad")(uri "${KIPRJMOD}/footprints/Package_DIP.pretty")(options "")(descr ""))
+  (lib (name "Connector_PinHeader_2.54mm")(type "KiCad")(uri "${KIPRJMOD}/footprints/Connector_PinHeader_2.54mm.pretty")(options "")(descr ""))
+  (lib (name "Capacitor_SMD")(type "KiCad")(uri "${KIPRJMOD}/footprints/Capacitor_SMD.pretty")(options "")(descr ""))
+  (lib (name "Resistor_SMD")(type "KiCad")(uri "${KIPRJMOD}/footprints/Resistor_SMD.pretty")(options "")(descr ""))
+  (lib (name "Connector_JST")(type "KiCad")(uri "${KIPRJMOD}/footprints/Connector_JST.pretty")(options "")(descr ""))
+  (lib (name "ESP32_mini")(type "KiCad")(uri "${KIPRJMOD}/footprints/ESP32_mini.pretty")(options "")(descr ""))
+  (lib (name "MountingHole")(type "KiCad")(uri "${KIPRJMOD}/footprints/MountingHole.pretty")(options "")(descr ""))
 )
