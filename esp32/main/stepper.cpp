@@ -50,7 +50,7 @@ static bool timer_isr_callback(gptimer_handle_t, const gptimer_alarm_event_data_
     if (steps_left > 0)
     {
         --steps_left;
-        REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_EN);
+        REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_EN1);
 
         if (step_forward)
         {
@@ -68,7 +68,7 @@ static bool timer_isr_callback(gptimer_handle_t, const gptimer_alarm_event_data_
         return false;
     }
     // no more work, disable driver
-    REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_EN);
+    REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_EN1);
     step_enable = false;
     return false;
 }

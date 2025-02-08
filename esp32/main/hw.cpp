@@ -20,7 +20,9 @@ void init_hardware()
         (1ULL << PIN_A2) |
         (1ULL << PIN_B1) |
         (1ULL << PIN_B2) |
-        (1ULL << PIN_EN);
+        (1ULL << PIN_EN1) |
+        (1ULL << PIN_EN2) |
+        (1ULL << PIN_EN3);
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
