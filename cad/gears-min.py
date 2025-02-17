@@ -7,7 +7,7 @@ module = 1
 t1 = 55
 t2 = 20
 # bore holes
-d1 = 7
+d1 = 7.05
 d2 = 1.55
 
 aa_sin = np.sin(np.radians(90))
@@ -30,7 +30,7 @@ g1 = (cq.Workplane('XY').
 
 wp1 = (cq.Workplane('XY').
        circle(54/2).
-       extrude(-5).
+       extrude(-1).
        tag("o").
        workplaneFromTagged("o").
        workplane(2.5).
