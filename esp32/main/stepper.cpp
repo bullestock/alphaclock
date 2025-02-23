@@ -7,10 +7,15 @@
 #include <esp_timer.h>
 #include <rom/gpio.h>
 
-static bool step_enable = false;
-static bool step_forward = false;
-static int steps_left = 0;
-static int current_phase = 0;
+const int NOF_MOTORS = 3;
+
+static bool step_enable[NOF_MOTORS];
+static bool step_forward[NOF_MOTORS];
+static int steps_left[NOF_MOTORS];
+static int current_phase[NOF_MOTORS];
+static int enable_pin[NOF_MOTORS];
+static int count = 0;
+static bool timer_enabled = false;
 
 static void step(int phase)
 {
@@ -42,51 +47,61 @@ static void step(int phase)
     }
 }
 
-static bool timer_isr_callback(gptimer_handle_t, const gptimer_alarm_event_data_t*, void*)
+static bool timer_isr_callback(gptimer_handle_t,
+                               const gptimer_alarm_event_data_t*,
+                               void*)
 {
-    if (!step_enable)
-        return false;
-
-    if (steps_left > 0)
+    for (int motor = 0; motor < NOF_MOTORS; ++motor)
     {
-        --steps_left;
-        REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_EN1);
+        if (!step_enable[motor])
+            continue;
 
-        if (step_forward)
+        if (steps_left[motor] > 0)
         {
-            ++current_phase;
-            if (current_phase == 4)
-                current_phase = 0;
+            --steps_left[motor];
+            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << enable_pin[motor]);
+
+            if (step_forward[motor])
+            {
+                ++current_phase[motor];
+                if (current_phase[motor] == 4)
+                    current_phase[motor] = 0;
+            }
+            else
+            {
+                if (current_phase[motor] == 0)
+                    current_phase[motor] = 4;
+                --current_phase[motor];
+            }
+            step(current_phase[motor]);
         }
         else
         {
-            if (current_phase == 0)
-                current_phase = 4;
-            --current_phase;
+            // no more work, disable driver
+            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << enable_pin[motor]);
+            step_enable[motor] = false;
         }
-        step(current_phase);
-        return false;
     }
-    // no more work, disable driver
-    REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_EN1);
-    step_enable = false;
     return false;
 }
 
 static gptimer_handle_t gptimer = nullptr;
 
-Stepper::Stepper()
+Stepper::Stepper(int _enable_pin)
 {
-    gptimer_config_t config = {
-        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
-        .direction = GPTIMER_COUNT_UP,
-        .resolution_hz = 1 * 1000 * 1000, // 1MHz, 1 tick = 1us
-        .intr_priority = 0,
-        //.intr_shared = 0,
-        //.backup_before_sleep = 0,
-        .flags = 0,
-    };
-    ESP_ERROR_CHECK(gptimer_new_timer(&config, &gptimer));
+    if (count == 0)
+    {
+        gptimer_config_t config = {
+            .clk_src = GPTIMER_CLK_SRC_DEFAULT,
+            .direction = GPTIMER_COUNT_UP,
+            .resolution_hz = 1 * 1000 * 1000, // 1MHz, 1 tick = 1us
+            .intr_priority = 0,
+            .flags = 0,
+        };
+        ESP_ERROR_CHECK(gptimer_new_timer(&config, &gptimer));
+    }
+    motor = count;
+    enable_pin[count++] = _enable_pin;
 }
 
 void Stepper::step(int nof_steps, uint64_t delay_us)
@@ -97,9 +112,9 @@ void Stepper::step(int nof_steps, uint64_t delay_us)
         gptimer_disable(gptimer);
     }
     
-    step_enable = false;
-    step_forward = nof_steps > 0;
-    steps_left = abs(nof_steps);
+    step_enable[motor] = false;
+    step_forward[motor] = nof_steps > 0;
+    steps_left[motor] = abs(nof_steps);
 
     gptimer_alarm_config_t alarm_config = {
         .alarm_count = delay_us,
@@ -117,7 +132,7 @@ void Stepper::step(int nof_steps, uint64_t delay_us)
     timer_enabled = true;
     ESP_ERROR_CHECK(gptimer_start(gptimer));
 
-    step_enable = true;
+    step_enable[motor] = true;
 }
 
 // Local Variables:

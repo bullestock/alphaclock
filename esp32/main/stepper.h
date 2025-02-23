@@ -5,10 +5,10 @@
 class Stepper
 {
 public:
-    Stepper();
+    Stepper(int enable_pin);
 
     void step(int nof_steps, uint64_t delay_us);
 
 private:
-    bool timer_enabled = false;
+    int motor = 0;
 };
