@@ -4,7 +4,7 @@ import numpy as np
         
 module = 1
 # teeth
-t1 = 65
+t1 = 68
 t2 = 20
 # bore holes
 d1 = 5.85
@@ -29,7 +29,7 @@ g1 = (cq.Workplane('XY').
       gear(gear1))
 
 wp1 = (cq.Workplane('XY').
-       circle(63/2).
+       circle(66/2).
        extrude(-0.8).
        circle(d1/2).
        cutThruAll())
