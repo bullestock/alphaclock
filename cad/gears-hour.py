@@ -1,5 +1,6 @@
 import cadquery as cq
 from cq_gears import BevelGear
+import math
 import numpy as np
         
 module = 1
@@ -29,12 +30,25 @@ g1 = (cq.Workplane('XY').
       gear(gear1))
 
 wp1 = (cq.Workplane('XY').
+       tag('o').
        circle(66/2).
        extrude(-0.8).
        circle(d1/2).
        cutThruAll())
 
 wp1 = wp1 + g1
+
+theta = 10
+r = 30
+for i in range(0, 16):
+    theta = math.radians(360*i/16)
+    wp1 = (wp1.
+           workplaneFromTagged('o').
+           transformed(offset=(r*math.cos(theta), 
+                               r*math.sin(theta), -0.5)).
+           sphere(1)
+           )
+
 #wp2 = cq.Workplane('XY').transformed(offset=(45, 0, 0)).gear(gear2)
 show_object(wp1)
 #show_object(wp2)
