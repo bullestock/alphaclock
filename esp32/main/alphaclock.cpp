@@ -13,6 +13,8 @@
 #include <esp_log.h>
 #include <esp_wifi.h>
 
+Stepper hours(PIN_EN1), minutes(PIN_EN2), seconds(PIN_EN3);
+
 extern "C"
 void app_main(void)
 {
@@ -71,28 +73,26 @@ void app_main(void)
     esp_log_level_set("esp_wifi", ESP_LOG_ERROR);
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
-    Stepper hours(PIN_EN1), minutes(PIN_EN2), seconds(PIN_EN3);
-
     while (1)
     {
         for (int i = 0; i < 8; ++i)
         {
             int64_t delay = 1000 + (10 - i)*500;
-            printf("step %.1f ms\n", int(delay/1000));
+            printf("step %.1f ms\n", delay/1000.0);
             hours.step(100, delay);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         for (int i = 0; i < 8; ++i)
         {
             int64_t delay = 1000 + (10 - i)*500;
-            printf("step %.1f ms\n", int(delay/1000));
+            printf("step %.1f ms\n", delay/1000.0);
             minutes.step(100, delay);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         for (int i = 0; i < 8; ++i)
         {
             int64_t delay = 1000 + (10 - i)*500;
-            printf("step %.1f ms\n", int(delay/1000));
+            printf("step %.1f ms\n", delay/1000.0);
 
             seconds.step(100, delay);
             vTaskDelay(1000 / portTICK_PERIOD_MS);

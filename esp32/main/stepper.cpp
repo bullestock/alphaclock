@@ -17,6 +17,7 @@ static int enable_pin[NOF_MOTORS];
 static int count = 0;
 static bool timer_enabled = false;
 
+// Note that this function only works if A/B pins are below GPIO32
 static void step(int phase)
 {
     switch (phase) {
@@ -56,10 +57,18 @@ static bool timer_isr_callback(gptimer_handle_t,
         if (!step_enable[motor])
             continue;
 
+        int enable = enable_pin[motor];
+        const bool bank1 = enable >= 32;
+        if (bank1)
+            enable -= 32;
+        
         if (steps_left[motor] > 0)
         {
             --steps_left[motor];
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << enable_pin[motor]);
+            if (bank1)
+                REG_WRITE(GPIO_OUT1_W1TS_REG, 1ULL << enable);
+            else
+                REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << enable);
 
             if (step_forward[motor])
             {
@@ -78,7 +87,10 @@ static bool timer_isr_callback(gptimer_handle_t,
         else
         {
             // no more work, disable driver
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << enable_pin[motor]);
+            if (bank1)
+                REG_WRITE(GPIO_OUT1_W1TC_REG, 1ULL << enable);
+            else
+                REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << enable);
             step_enable[motor] = false;
         }
     }
