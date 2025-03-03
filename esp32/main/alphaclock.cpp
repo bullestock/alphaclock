@@ -5,6 +5,7 @@
 #include "nvs.h"
 #include "sntp.h"
 #include "stepper.h"
+#include "websocket.h"
 
 #include <stdio.h>
 
@@ -72,6 +73,8 @@ void app_main(void)
     
     esp_log_level_set("esp_wifi", ESP_LOG_ERROR);
     esp_log_level_set("wifi", ESP_LOG_ERROR);
+
+    start_webserver();
 
     while (1)
     {

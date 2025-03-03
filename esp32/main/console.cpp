@@ -8,7 +8,7 @@
 
 #include "esp_system.h"
 #include "esp_log.h"
-#include "esp_console.h"
+#include <esp_console.h>
 #include <esp_timer.h>
 #include <driver/uart_vfs.h>
 #include <driver/uart.h>
