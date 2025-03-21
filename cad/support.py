@@ -1,17 +1,26 @@
 import cadquery as cq
 
+# overall
 dia = 70
+# raised part
+dia2 = 25
+# hole
+dia3 = 17.3
 w = 20
 d = 6
 th = 1
-h = 12
+h = 13.5
 insert_r = 4.2/2
 
+# base
 part1 = (cq.Workplane("XY")
          .circle(dia/2)
          .extrude(th)
+         .circle(dia2/2)
+         .extrude(th)
          )
 
+# uprights
 part2 = (cq.Workplane("XY")
          .rect(w, dia + 2 * d)
          .extrude(th)
@@ -29,11 +38,11 @@ part2 = (cq.Workplane("XY")
 
 res = part1.union(part2)
 
+# center hole
 res = (res
          .faces(">Z")
          .workplane()
-         .circle(17.2/2)
+         .circle(dia3/2)
          .cutThruAll()
 )
 show_object(res)
-
