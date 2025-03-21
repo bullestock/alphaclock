@@ -9,6 +9,8 @@ public:
 
     void step(int nof_steps, uint64_t delay_us);
 
+    bool busy() const;
+
 private:
     int motor = 0;
 };

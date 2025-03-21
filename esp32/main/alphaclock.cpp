@@ -24,6 +24,22 @@ void app_main(void)
     const auto app_desc = esp_app_get_description();
     printf("AlphaClock v %s\n", app_desc->version);
 
+    while (1)
+    {
+        for (int i = 0; i < 5; ++i)
+        {
+            int64_t delay = 10000 + (10 - i)*10000;
+            printf("step %.1f ms\n", delay/1000.0);
+            hours.step(100, delay);
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+            while (hours.busy())
+            {
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+    }
+    
     init_nvs();
 
     const auto wifi_creds = get_wifi_creds();

@@ -147,6 +147,11 @@ void Stepper::step(int nof_steps, uint64_t delay_us)
     step_enable[motor] = true;
 }
 
+bool Stepper::busy() const
+{
+    return step_enable[motor];
+}
+
 // Local Variables:
 // compile-command: "cd .. && idf.py build"
 // End:
