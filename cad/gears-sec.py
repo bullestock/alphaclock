@@ -5,7 +5,7 @@ import numpy as np
 module = 1
 # teeth
 t1 = 40
-t2 = 20
+t2 = 7
 # bore holes
 d1= 2.55
 d2 = 1.55
@@ -34,6 +34,6 @@ wp1 = (cq.Workplane('XY').
        cutBlind(10)
        )
 
-#wp2 = cq.Workplane('XY').transformed(offset=(45, 0, 0)).gear(gear2)
-show_object(wp1)
-#show_object(wp2)
+wp2 = cq.Workplane('XY').transformed(offset=(45, 0, 0)).gear(gear2)
+#show_object(wp1)
+show_object(wp2)
