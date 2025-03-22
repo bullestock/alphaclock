@@ -2,7 +2,7 @@
 from build123d import *
 from ocp_vscode import *
 
-H = 12
+H = 14
 depth = 16
 
 pts = [
