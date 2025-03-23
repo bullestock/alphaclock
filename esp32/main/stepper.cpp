@@ -12,9 +12,11 @@
 #include <rom/gpio.h>
 
 const int NOF_MOTORS = 3;
-const int NOF_MICRO_STEPS = 4;
+// Must be a multiple of 4
+const int NOF_MICRO_STEPS = 16;
 
 const bool USE_MICRO_STEPPING = true;
+const int MAX_PWM = 1024; // must match timer resolution
 
 static bool step_enable[NOF_MOTORS];
 static bool step_forward[NOF_MOTORS];
@@ -24,53 +26,34 @@ static int enable_pin[NOF_MOTORS];
 static int count = 0;
 static bool timer_enabled = false;
 
+int calc_pwm(int phase, int offset)
+{
+    return int(cos(((phase + 0) +
+                    (offset/4.0 * NOF_MICRO_STEPS))/
+                   NOF_MICRO_STEPS * 2.0 * std::numbers::pi) * static_cast<float>(MAX_PWM));
+}
+
 // Note that this function only works if A/B pins are below GPIO32
 static void step(int phase)
 {
     if (USE_MICRO_STEPPING)
     {
-        // each coil has sinusoidal pattern offset pi/2 rad from previous coil
-        int coil1a_pwm = int(cos(((phase + 1)+(0.0/4.0*NOF_MICRO_STEPS))/NOF_MICRO_STEPS*2.0*std::numbers::pi)*255.0);
-        int coil1b_pwm = int(cos(((phase + 1)+(2.0/4.0*NOF_MICRO_STEPS))/NOF_MICRO_STEPS*2.0*std::numbers::pi)*255.0);
-        int coil2a_pwm = int(cos(((phase + 1)+(3.0/4.0*NOF_MICRO_STEPS))/NOF_MICRO_STEPS*2.0*std::numbers::pi)*255.0);
-        int coil2b_pwm = int(cos(((phase + 1)+(1.0/4.0*NOF_MICRO_STEPS))/NOF_MICRO_STEPS*2.0*std::numbers::pi)*255.0);
+        // each coil has sinusoidal pattern offset 90 degrees from previous coil
+        int coil1a_pwm = calc_pwm(phase, 0);
+        int coil1b_pwm = calc_pwm(phase, 2);
+        int coil2a_pwm = calc_pwm(phase, 3);
+        int coil2b_pwm = calc_pwm(phase, 1);
     
         // half rectify each wave
-        if (coil1a_pwm < 0) {
+        if (coil1a_pwm < 0)
             coil1a_pwm = 0;
-        }
-        if (coil1b_pwm < 0) {
+        if (coil1b_pwm < 0)
             coil1b_pwm = 0;
-        }
-        if (coil2a_pwm < 0) {
+        if (coil2a_pwm < 0)
             coil2a_pwm = 0;
-        }
-        if (coil2b_pwm < 0) {
+        if (coil2b_pwm < 0)
             coil2b_pwm = 0;
-        }
 
-        switch (phase) {
-        case 0:  // 1010
-            printf("1010\n");
-            coil1a_pwm = coil2a_pwm = 255;
-            coil1b_pwm = coil2b_pwm = 0;
-            break;
-        case 1:  // 0110
-            printf("0110\n");
-            coil1b_pwm = coil2a_pwm = 255;
-            coil1a_pwm = coil2b_pwm = 0;
-            break;
-        case 2:  //0101
-            printf("0101\n");
-            coil1b_pwm = coil2b_pwm = 255;
-            coil1a_pwm = coil2a_pwm = 0;
-            break;
-        case 3:  //1001
-            printf("1001\n");
-            coil1a_pwm = coil2b_pwm = 255;
-            coil1b_pwm = coil2a_pwm = 0;
-            break;
-        }
         printf("%3d %3d %3d %3d\n",
                coil1a_pwm, coil1b_pwm, coil2a_pwm, coil2b_pwm);
         
@@ -188,9 +171,9 @@ Stepper::Stepper(int _enable_pin)
 
         ledc_timer_config_t ledc_timer = {
             .speed_mode = LEDC_LOW_SPEED_MODE,
-            .duty_resolution = LEDC_TIMER_8_BIT,
+            .duty_resolution = LEDC_TIMER_10_BIT,
             .timer_num = LEDC_TIMER_0,
-            .freq_hz = 200, // chairbot
+            .freq_hz = 20000,
             .clk_cfg = LEDC_AUTO_CLK,
             .deconfigure = 0,
         };
