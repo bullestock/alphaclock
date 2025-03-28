@@ -35,5 +35,5 @@ wp1 = (cq.Workplane('XY').
        )
 
 wp2 = cq.Workplane('XY').transformed(offset=(45, 0, 0)).gear(gear2)
-#show_object(wp1)
+show_object(wp1)
 show_object(wp2)

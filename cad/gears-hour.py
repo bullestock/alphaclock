@@ -6,7 +6,7 @@ import numpy as np
 module = 1
 # teeth
 t1 = 68
-t2 = 20
+t2 = 12
 # bore holes
 d1 = 5.85
 d2 = 1.55
@@ -49,6 +49,6 @@ for i in range(0, 16):
            sphere(1)
            )
 
-#wp2 = cq.Workplane('XY').transformed(offset=(45, 0, 0)).gear(gear2)
+wp2 = cq.Workplane('XY').transformed(offset=(45, 0, 0)).gear(gear2)
 show_object(wp1)
 #show_object(wp2)

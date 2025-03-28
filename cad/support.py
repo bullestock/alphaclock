@@ -1,15 +1,15 @@
 import cadquery as cq
 
 # overall
-dia = 70
+dia = 150
 # raised part
 dia2 = 25
 # hole
 dia3 = 17.3
 w = 20
-d = 6
-th = 1
-h = 13.5
+d = 8
+th = 2
+h = 17
 insert_r = 4.2/2
 
 # base
@@ -33,7 +33,8 @@ part2 = (cq.Workplane("XY")
          .rarray(w/2, dia + d, 2, 2)
          .circle(insert_r)
          .cutBlind(-5)
-         
+         .edges("|Z")
+         .fillet(2)
          )
 
 res = part1.union(part2)
