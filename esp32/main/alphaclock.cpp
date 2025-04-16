@@ -115,8 +115,8 @@ void app_main(void)
                     &hours, &minutes, &seconds
                 };
                 auto stepper = steppers[active_button];
-                // TODO: 1 step does not work
-                stepper->step(button_direction_up ? 100 : -1, 5000);
+                stepper->step(button_direction_up ? NOF_MICRO_STEPS : -NOF_MICRO_STEPS,
+                              5000);
             }
         }
 #if 0

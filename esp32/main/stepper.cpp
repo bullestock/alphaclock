@@ -13,11 +13,7 @@
 
 const int NOF_MOTORS = 3;
 
-const bool USE_MICRO_STEPPING = true;
 const int MAX_PWM = 1024; // must match timer resolution
-
-// Must be a multiple of 4
-const int NOF_MICRO_STEPS = USE_MICRO_STEPPING ? 16 : 4;
 
 static bool step_enable[NOF_MOTORS];
 static bool step_forward[NOF_MOTORS];
@@ -55,8 +51,7 @@ static void step(int phase)
         if (coil2b_pwm < 0)
             coil2b_pwm = 0;
 
-        printf("%3d %3d %3d %3d\n",
-               coil1a_pwm, coil1b_pwm, coil2a_pwm, coil2b_pwm);
+        //printf("%3d %3d %3d %3d\n", coil1a_pwm, coil1b_pwm, coil2a_pwm, coil2b_pwm);
         
         ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, coil1a_pwm));
         ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
@@ -71,28 +66,24 @@ static void step(int phase)
     {
         switch (phase) {
         case 0:  // 1010
-            printf("1010\n");
             REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A1);
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A2);
             REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_B1);
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B2);
             break;
         case 1:  // 0110
-            printf("0110\n");
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A1);
             REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A2);
             REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_B1);
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B2);
             break;
         case 2:  //0101
-            printf("0101\n");
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A1);
             REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A2);
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B1);
             REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_B2);
             break;
         case 3:  //1001
-            printf("1001\n");
             REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A1);
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A2);
             REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B1);
