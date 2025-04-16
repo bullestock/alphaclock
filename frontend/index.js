@@ -29,20 +29,35 @@ window.addEventListener('load', () => {
 
     // Add event handlers for buttons
     const upButtons = {
-        'h': hoursUpBtn,
-        'm': minsUpBtn,
-        's': secsUpBtn
+        0: hoursUpBtn,
+        1: minsUpBtn,
+        2: secsUpBtn
     }
     const downButtons = {
-        'h': hoursDownBtn,
-        'm': minsDownBtn,
-        's': secsDownBtn
+        0: hoursDownBtn,
+        1: minsDownBtn,
+        2: secsDownBtn
+    }
+    const identifiers = {
+        0: 'h',
+        1: 'm',
+        2: 's'
     }
 
     function handleClick(is_up_button, is_mouse_down, ident) {
-        console.log(ident + ' ' +
+        console.log(identifiers[ident] + ' ' +
                     (is_up_button ? 'up' : 'down ') + ': ' + 
                     (is_mouse_down ? 'start' : 'stop'))
+        let dview = new DataView(new ArrayBuffer(2))
+        dview.setUint8(0, 0)
+        let arg = 0
+        if (is_up_button)
+            arg |= 128
+        if (is_mouse_down)
+            arg |= 64
+        arg |= ident
+        dview.setUint8(1, arg)
+        ws.send(dview.buffer)
     }
 
     for (const ident in upButtons) {

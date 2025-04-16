@@ -9,81 +9,87 @@
 #include <sys/param.h>
 #include "esp_netif.h"
 
-struct async_resp_arg
+void handle_up_down_button(uint8_t arg)
 {
-    httpd_handle_t hd;
-    int fd;
-};
-
-static void ws_async_send(void *arg)
-{
-    static const char* data = "Async data";
-    auto resp_arg = reinterpret_cast<async_resp_arg*>(arg);
-    httpd_handle_t hd = resp_arg->hd;
-    int fd = resp_arg->fd;
-    httpd_ws_frame_t ws_pkt;
-    memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.payload = (uint8_t*)data;
-    ws_pkt.len = strlen(data);
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-
-    httpd_ws_send_frame_async(hd, fd, &ws_pkt);
-    free(resp_arg);
+    const bool is_up_button = arg & 0x80;
+    const bool is_mouse_down = arg & 0x40;
+    const int ident = arg & 0x03;
+    if (ident > 2)
+    {
+        ESP_LOGE(TAG, "Invalid ident %d", ident);
+        return;
+    }
+    static const char* identifiers = "hms";
+    ESP_LOGI(TAG, "Button %c %s: %s",
+             identifiers[ident],
+             is_up_button ? "up" : "down",
+             is_mouse_down ? "start" : "stop");
 }
 
-static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
+static esp_err_t ws_handler(httpd_req_t *req)
 {
-    auto resp_arg = reinterpret_cast<async_resp_arg *>(malloc(sizeof(async_resp_arg)));
-    resp_arg->hd = req->handle;
-    resp_arg->fd = httpd_req_to_sockfd(req);
-    return httpd_queue_work(handle, ws_async_send, resp_arg);
-}
-
-static esp_err_t echo_handler(httpd_req_t *req)
-{
-    if (req->method == HTTP_GET) {
+    if (req->method == HTTP_GET)
+    {
         ESP_LOGI(TAG, "Handshake done, the new connection was opened");
         return ESP_OK;
     }
     httpd_ws_frame_t ws_pkt;
-    uint8_t *buf = NULL;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
-    /* Set max_len = 0 to get the frame len */
+    uint8_t* buf = nullptr;
+    // Set max_len = 0 to get the frame len
     esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK)
+    {
         ESP_LOGE(TAG, "httpd_ws_recv_frame failed to get frame len with %d", ret);
         return ret;
     }
-    ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
-    if (ws_pkt.len) {
-        /* ws_pkt.len + 1 is for NULL termination as we are expecting a string */
+    if (ws_pkt.len)
+    {
         buf = reinterpret_cast<uint8_t*>(calloc(1, ws_pkt.len + 1));
-        if (buf == NULL) {
+        if (buf == NULL)
+        {
             ESP_LOGE(TAG, "Failed to calloc memory for buf");
             return ESP_ERR_NO_MEM;
         }
         ws_pkt.payload = buf;
-        /* Set max_len = ws_pkt.len to get the frame payload */
+        // Set max_len = ws_pkt.len to get the frame payload
         ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
-        if (ret != ESP_OK) {
+        if (ret != ESP_OK)
+        {
             ESP_LOGE(TAG, "httpd_ws_recv_frame failed with %d", ret);
             free(buf);
             return ret;
         }
-        ESP_LOGI(TAG, "Got packet with message: %s", ws_pkt.payload);
-    }
-    ESP_LOGI(TAG, "Packet type: %d", ws_pkt.type);
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT &&
-        strcmp((char*)ws_pkt.payload,"Trigger async") == 0) {
-        free(buf);
-        return trigger_async_send(req->handle, req);
-    }
+        if (ws_pkt.len < 2)
+        {
+            ESP_LOGE(TAG, "WS frame too short: %d", (int) ws_pkt.len);
+            free(buf);
+            return ESP_ERR_INVALID_ARG;
+        }
+        if (ws_pkt.type != HTTPD_WS_TYPE_BINARY)
+        {
+            ESP_LOGE(TAG, "WS frame not binary: %d", (int) ws_pkt.type);
+            free(buf);
+            return ESP_ERR_INVALID_ARG;
+        }
+        ESP_LOGI(TAG, "Got WS message: %02X %02X",
+                 ws_pkt.payload[0], ws_pkt.payload[1]);
+        switch (ws_pkt.payload[0])
+        {
+        case 0:
+            handle_up_down_button(ws_pkt.payload[1]);
+            break;
 
-    ret = httpd_ws_send_frame(req, &ws_pkt);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "httpd_ws_send_frame failed with %d", ret);
+        default:
+            ESP_LOGE(TAG, "Invalid WS command: %02X", ws_pkt.payload[0]);
+            break;
+        }
     }
+    /*
+    ret = httpd_ws_send_frame(req, &ws_pkt);
+    if (ret != ESP_OK)
+        ESP_LOGE(TAG, "httpd_ws_send_frame failed with %d", ret);
+    */
     free(buf);
     return ret;
 }
@@ -115,7 +121,7 @@ static esp_err_t root_get_handler(httpd_req_t* req)
 static const httpd_uri_t ws = {
     .uri        = "/ws",
     .method     = HTTP_GET,
-    .handler    = echo_handler,
+    .handler    = ws_handler,
     .user_ctx   = nullptr,
     .is_websocket = true
 };
