@@ -4,15 +4,6 @@ window.addEventListener('load', () => {
     let byId = id => document.getElementById(id)
     let ws = new WebSocket('ws://' + window.location.host + '/ws')
     ws.binaryType = 'arraybuffer'
-    ws.addEventListener('open', () => {
-        window.setInterval(() => {
-            sendSteeringCommand(x, y)
-        }, 50)
-
-        window.setInterval(() => {
-            requestGravity()
-        }, 50)
-    })
 
     let hoursUpBtn = byId('hoursUp')
     let hoursDownBtn = byId('hoursDown')
@@ -22,16 +13,18 @@ window.addEventListener('load', () => {
     let secsDownBtn = byId('secsDown')
 
     ws.addEventListener('message', e => {
+        console.log('WS msg: ' + e)
+        /*
         let dview = new DataView(e.data)
         let command = dview.getUint8(0)
         if (command === 3 && e.data.byteLength === 3) {
             let batteryValue = dview.getInt16(1, true) / 1000
             battery.innerText = batteryValue.toFixed(2)
         } else if (command === 2 && e.data.byteLength === 5) {
-            hasGravityData = true
             tiltX = dview.getInt16(3, true) / 32768.0
             tiltY = dview.getInt16(1, true) / 32768.0
-        }
+            }
+        */
     })
 
     // Add event handlers for buttons

@@ -24,6 +24,7 @@ void app_main(void)
     const auto app_desc = esp_app_get_description();
     printf("AlphaClock v %s\n", app_desc->version);
 
+#if 0
     int dir = 1;
     while (1)
     {
@@ -43,6 +44,7 @@ void app_main(void)
         }
         dir *= -1;
     }
+#endif
     
     init_nvs();
 
@@ -96,8 +98,12 @@ void app_main(void)
 
     start_webserver();
 
+#if 0
     while (1)
     {
+#if 1
+        vTaskDelay(1);
+#else
         for (int i = 0; i < 8; ++i)
         {
             int64_t delay = 1000 + (10 - i)*500;
@@ -120,7 +126,9 @@ void app_main(void)
             seconds.step(100, delay);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
+#endif
     }
+#endif
 }
 
 // Local Variables:

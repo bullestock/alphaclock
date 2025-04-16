@@ -3,4 +3,5 @@ idf_component_register(SRCS
                        websocket.cpp
                        INCLUDE_DIRS "."
                        REQUIRES console driver esp_app_format esp_driver_gpio esp_driver_gptimer
-                       esp_driver_uart esp_http_server esp_timer esp_wifi nvs_flash)
+                       esp_driver_uart esp_http_server esp_timer esp_wifi nvs_flash
+                       EMBED_FILES "../../frontend/index.html" "../../frontend/index.js")

@@ -88,12 +88,44 @@ static esp_err_t echo_handler(httpd_req_t *req)
     return ret;
 }
 
+extern const uint8_t index_html_start[] asm("_binary_index_html_start");
+extern const uint8_t index_html_end[] asm("_binary_index_html_end");
+const size_t index_html_size = index_html_end - index_html_start;
+
+extern const uint8_t index_js_start[] asm("_binary_index_js_start");
+extern const uint8_t index_js_end[] asm("_binary_index_js_end");
+const size_t index_js_size = index_js_end - index_js_start;
+
+static esp_err_t root_get_handler(httpd_req_t* req)
+{
+    ESP_LOGI(TAG, "URI: %s", req->uri);
+    if (strlen(req->uri) == 1)
+    {
+        httpd_resp_send_chunk(req, reinterpret_cast<const char*>(index_html_start), index_html_size);
+    }
+    else if (!strcmp(req->uri, "/index.js"))
+    {
+        httpd_resp_set_type(req, "text/javascript");
+        httpd_resp_send_chunk(req, reinterpret_cast<const char*>(index_js_start), index_js_size);
+    }
+    httpd_resp_send_chunk(req, NULL, 0);
+    return ESP_OK;
+}
+
 static const httpd_uri_t ws = {
     .uri        = "/ws",
     .method     = HTTP_GET,
     .handler    = echo_handler,
-    .user_ctx   = NULL,
+    .user_ctx   = nullptr,
     .is_websocket = true
+};
+
+static const httpd_uri_t root = {
+    .uri       = "/*",
+    .method    = HTTP_GET,
+    .handler   = root_get_handler,
+    .user_ctx  = nullptr,
+    .is_websocket = false
 };
 
 
@@ -101,7 +133,8 @@ httpd_handle_t start_webserver()
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
+    config.uri_match_fn = httpd_uri_match_wildcard;
+    
     // Start the httpd server
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) == ESP_OK)
@@ -109,6 +142,7 @@ httpd_handle_t start_webserver()
         // Registering the ws handler
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &ws);
+        httpd_register_uri_handler(server, &root);
         return server;
     }
 
