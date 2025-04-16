@@ -9,6 +9,10 @@
 #include <sys/param.h>
 #include "esp_netif.h"
 
+bool is_button_pressed = false;
+int active_button = 0;
+bool button_direction_up = false;
+
 void handle_up_down_button(uint8_t arg)
 {
     const bool is_up_button = arg & 0x80;
@@ -24,6 +28,14 @@ void handle_up_down_button(uint8_t arg)
              identifiers[ident],
              is_up_button ? "up" : "down",
              is_mouse_down ? "start" : "stop");
+    if (is_mouse_down)
+    {
+        active_button = ident;
+        button_direction_up = is_up_button;
+        is_button_pressed = true;
+    }
+    else
+        is_button_pressed = false;
 }
 
 static esp_err_t ws_handler(httpd_req_t *req)

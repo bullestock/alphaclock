@@ -12,11 +12,12 @@
 #include <rom/gpio.h>
 
 const int NOF_MOTORS = 3;
-// Must be a multiple of 4
-const int NOF_MICRO_STEPS = 16;
 
 const bool USE_MICRO_STEPPING = true;
 const int MAX_PWM = 1024; // must match timer resolution
+
+// Must be a multiple of 4
+const int NOF_MICRO_STEPS = USE_MICRO_STEPPING ? 16 : 4;
 
 static bool step_enable[NOF_MOTORS];
 static bool step_forward[NOF_MOTORS];
@@ -253,25 +254,26 @@ void Stepper::step(int nof_steps, uint64_t delay_us)
         REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << enable);
 
     int abs_nof_steps = abs(nof_steps);
-    int current_phase = 0;
+    int phase = current_phase[motor];
     while (abs_nof_steps > 0)
     {
-        ::step(current_phase);
+        ::step(phase);
         if (nof_steps > 0)
         {
-            ++current_phase;
-            if (current_phase >= NOF_MICRO_STEPS)
-                current_phase = 0;
+            ++phase;
+            if (phase >= NOF_MICRO_STEPS)
+                phase = 0;
         }
         else
         {
-            --current_phase;
-            if (current_phase < 0)
-                current_phase = NOF_MICRO_STEPS - 1;
+            --phase;
+            if (phase < 0)
+                phase = NOF_MICRO_STEPS - 1;
         }
         vTaskDelay(delay_us / 1000 / portTICK_PERIOD_MS);
         --abs_nof_steps;
     }
+    current_phase[motor] = phase;
 
     if (bank1)
         REG_WRITE(GPIO_OUT1_W1TC_REG, 1ULL << enable);

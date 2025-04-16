@@ -98,12 +98,28 @@ void app_main(void)
 
     start_webserver();
 
-#if 0
+    bool is_running = false;
+
+    extern bool is_button_pressed;
+    extern int active_button;
+    extern bool button_direction_up;
+    
     while (1)
     {
-#if 1
         vTaskDelay(1);
-#else
+        if (!is_running)
+        {
+            if (is_button_pressed)
+            {
+                Stepper* steppers[] = {
+                    &hours, &minutes, &seconds
+                };
+                auto stepper = steppers[active_button];
+                // TODO: 1 step does not work
+                stepper->step(button_direction_up ? 100 : -1, 5000);
+            }
+        }
+#if 0
         for (int i = 0; i < 8; ++i)
         {
             int64_t delay = 1000 + (10 - i)*500;
@@ -128,7 +144,6 @@ void app_main(void)
         }
 #endif
     }
-#endif
 }
 
 // Local Variables:

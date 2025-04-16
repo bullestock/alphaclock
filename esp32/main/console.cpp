@@ -29,7 +29,7 @@ struct
 {
     struct arg_int* motor;
     struct arg_int* delay;
-    struct arg_int* duration;
+    struct arg_int* steps;
     struct arg_end* end;
 } motor_args;
 
@@ -48,14 +48,14 @@ static int test_motor(int argc, char** argv)
         return 1;
     }
     const auto delay = motor_args.delay->ival[0];
-    const auto duration = motor_args.duration->ival[0];
+    const auto steps = motor_args.steps->ival[0];
 
     Stepper* motors[] = { &hours, &minutes, &seconds };
     
-    printf("Running motor %d at %d for %d\n",
-           motor, delay, duration);
+    printf("Stepping motor %d at %d us: %d\n",
+           motor, delay, steps);
 
-    motors[motor]->step(duration, delay);
+    motors[motor]->step(steps, delay);
 
     printf("Done\n");
 
@@ -171,7 +171,7 @@ void run_console()
 
     motor_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     motor_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
-    motor_args.duration = arg_int1(NULL, NULL, "<duration>", "Number of steps)");
+    motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps)");
     motor_args.end = arg_end(2);
     const esp_console_cmd_t test_motor_cmd = {
         .command = "motor",
