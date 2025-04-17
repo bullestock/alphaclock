@@ -14,17 +14,6 @@ window.addEventListener('load', () => {
 
     ws.addEventListener('message', e => {
         console.log('WS msg: ' + e)
-        /*
-        let dview = new DataView(e.data)
-        let command = dview.getUint8(0)
-        if (command === 3 && e.data.byteLength === 3) {
-            let batteryValue = dview.getInt16(1, true) / 1000
-            battery.innerText = batteryValue.toFixed(2)
-        } else if (command === 2 && e.data.byteLength === 5) {
-            tiltX = dview.getInt16(3, true) / 32768.0
-            tiltY = dview.getInt16(1, true) / 32768.0
-            }
-        */
     })
 
     // Add event handlers for buttons
@@ -63,29 +52,20 @@ window.addEventListener('load', () => {
     for (const ident in upButtons) {
         if (upButtons.hasOwnProperty(ident)) {
             const upBtn = upButtons[ident]
-            upBtn.addEventListener('mousedown', () => {
+            upBtn.addEventListener('pointerdown', () => {
                 handleClick(true, true, ident)
             })
-            upBtn.addEventListener('mouseup', () => {
+            upBtn.addEventListener('pointerup', () => {
                 handleClick(true, false, ident)
             })
             const downBtn = downButtons[ident]
-            downBtn.addEventListener('mousedown', () => {
+            downBtn.addEventListener('pointerdown', () => {
                 handleClick(false, true, ident)
             })
-            downBtn.addEventListener('mouseup', () => {
+            downBtn.addEventListener('pointerup', () => {
                 handleClick(false, false, ident)
             })
         }
     }
-
-    function sendSteeringCommand(turning, speed) {
-        let dview = new DataView(new ArrayBuffer(3))
-        dview.setUint8(0, 0)
-        dview.setInt8(1, turning * 127)
-        dview.setInt8(2, speed * 127)
-        ws.send(dview.buffer)
-    }
-
 })
 
