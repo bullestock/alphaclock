@@ -58,11 +58,17 @@ window.addEventListener('load', () => {
             upBtn.addEventListener('pointerup', () => {
                 handleClick(true, false, ident)
             })
+            upBtn.addEventListener('pointerout', () => {
+                handleClick(true, false, ident)
+            })
             const downBtn = downButtons[ident]
             downBtn.addEventListener('pointerdown', () => {
                 handleClick(false, true, ident)
             })
             downBtn.addEventListener('pointerup', () => {
+                handleClick(false, false, ident)
+            })
+            downBtn.addEventListener('pointerout', () => {
                 handleClick(false, false, ident)
             })
         }

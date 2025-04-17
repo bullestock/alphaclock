@@ -122,17 +122,16 @@ void app_main(void)
                 int delay = 10000;
                 if (!was_button_pressed)
                 {
+                    // Remember time of initial button press
                     button_down_tick = esp_timer_get_time();
                     was_button_pressed = true;
                 }
                 else
                 {
+                    // Increase speed if button pressed for more than ½ second
                     const int64_t elapsed = esp_timer_get_time() - button_down_tick;
                     if (elapsed > 500000)
-                    {
-                        printf("ope\n");
                         delay = 2000;
-                    }
                 }
                 auto stepper = steppers[active_button];
                 stepper->start(button_direction_up, delay);
@@ -147,30 +146,6 @@ void app_main(void)
                 }
             }
         }
-#if 0
-        for (int i = 0; i < 8; ++i)
-        {
-            int64_t delay = 1000 + (10 - i)*500;
-            printf("step %.1f ms\n", delay/1000.0);
-            hours.step(100, delay);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-        for (int i = 0; i < 8; ++i)
-        {
-            int64_t delay = 1000 + (10 - i)*500;
-            printf("step %.1f ms\n", delay/1000.0);
-            minutes.step(100, delay);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-        for (int i = 0; i < 8; ++i)
-        {
-            int64_t delay = 1000 + (10 - i)*500;
-            printf("step %.1f ms\n", delay/1000.0);
-
-            seconds.step(100, delay);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-#endif
     }
 }
 
