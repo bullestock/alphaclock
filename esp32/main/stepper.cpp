@@ -204,30 +204,8 @@ Stepper::Stepper(int _enable_pin)
     enable_pin[count++] = _enable_pin;
 }
 
-void Stepper::step(int nof_steps, uint64_t delay_us)
+void enable_timer()
 {
-    nof_steps *= NOF_MICRO_STEPS;
-#if 0
-    // interrupt driven
-    
-    if (timer_enabled)
-    {
-        gptimer_stop(gptimer);
-        gptimer_disable(gptimer);
-    }
-    
-    step_enable[motor] = false;
-    step_forward[motor] = nof_steps > 0;
-    steps_left[motor] = abs(nof_steps);
-
-    gptimer_alarm_config_t alarm_config = {
-        .alarm_count = delay_us,
-        .reload_count = 0, // counter will reload with 0 on alarm event
-        .flags = 0,
-    };
-    alarm_config.flags.auto_reload_on_alarm = true;
-    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &alarm_config));
-
     gptimer_event_callbacks_t cbs = {
         .on_alarm = timer_isr_callback,
     };
@@ -235,47 +213,57 @@ void Stepper::step(int nof_steps, uint64_t delay_us)
     ESP_ERROR_CHECK(gptimer_enable(gptimer));
     timer_enabled = true;
     ESP_ERROR_CHECK(gptimer_start(gptimer));
+}
+
+void set_timer_rate(uint64_t delay_us)
+{
+    gptimer_alarm_config_t alarm_config = {
+        .alarm_count = delay_us,
+        .reload_count = 0, // counter will reload with 0 on alarm event
+        .flags = 0,
+    };
+    alarm_config.flags.auto_reload_on_alarm = true;
+    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &alarm_config));
+}
+
+void Stepper::step(int nof_steps, uint64_t delay_us, bool wait)
+{
+    nof_steps *= NOF_MICRO_STEPS;
+    
+    step_enable[motor] = false;
+    step_forward[motor] = nof_steps > 0;
+    steps_left[motor] = abs(nof_steps);
+
+    set_timer_rate(delay_us);
+
+    if (!timer_enabled)
+        enable_timer();
 
     step_enable[motor] = true;
-#else
-    // busy wait
 
-    int enable = enable_pin[motor];
-    const bool bank1 = enable >= 32;
-    if (bank1)
-        enable -= 32;
-    if (bank1)
-        REG_WRITE(GPIO_OUT1_W1TS_REG, 1ULL << enable);
-    else
-        REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << enable);
+    if (!wait)
+        return;
 
-    int abs_nof_steps = abs(nof_steps);
-    int phase = current_phase[motor];
-    while (abs_nof_steps > 0)
-    {
-        ::step(phase);
-        if (nof_steps > 0)
-        {
-            ++phase;
-            if (phase >= NOF_MICRO_STEPS)
-                phase = 0;
-        }
-        else
-        {
-            --phase;
-            if (phase < 0)
-                phase = NOF_MICRO_STEPS - 1;
-        }
-        vTaskDelay(delay_us / 1000 / portTICK_PERIOD_MS);
-        --abs_nof_steps;
-    }
-    current_phase[motor] = phase;
+    while (steps_left[motor] > 0)
+        vTaskDelay(1);
+}
 
-    if (bank1)
-        REG_WRITE(GPIO_OUT1_W1TC_REG, 1ULL << enable);
-    else
-        REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << enable);
-#endif
+void Stepper::start(bool forward, uint64_t delay_us)
+{
+    step_forward[motor] = forward;
+    steps_left[motor] = 10000;
+
+    set_timer_rate(delay_us);
+
+    if (!timer_enabled)
+        enable_timer();
+
+    step_enable[motor] = true;
+}
+
+void Stepper::stop()
+{
+    step_enable[motor] = false;
 }
 
 bool Stepper::busy() const

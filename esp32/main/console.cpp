@@ -55,7 +55,7 @@ static int test_motor(int argc, char** argv)
     printf("Stepping motor %d at %d us: %d\n",
            motor, delay, steps);
 
-    motors[motor]->step(steps, delay);
+    motors[motor]->step(steps, delay, true);
 
     printf("Done\n");
 

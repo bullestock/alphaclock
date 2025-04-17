@@ -12,6 +12,7 @@
 #include <esp_app_desc.h>
 #include <esp_event.h>
 #include <esp_log.h>
+#include <esp_timer.h>
 #include <esp_wifi.h>
 
 Stepper hours(PIN_EN1), minutes(PIN_EN2), seconds(PIN_EN3);
@@ -101,9 +102,16 @@ void app_main(void)
     bool is_running = false;
 
     extern bool is_button_pressed;
+    bool was_button_pressed = false;
     extern int active_button;
     extern bool button_direction_up;
-    
+
+    int64_t button_down_tick = 0;
+
+    Stepper* steppers[] = {
+        &hours, &minutes, &seconds
+    };
+
     while (1)
     {
         vTaskDelay(1);
@@ -111,12 +119,32 @@ void app_main(void)
         {
             if (is_button_pressed)
             {
-                Stepper* steppers[] = {
-                    &hours, &minutes, &seconds
-                };
+                int delay = 10000;
+                if (!was_button_pressed)
+                {
+                    button_down_tick = esp_timer_get_time();
+                    was_button_pressed = true;
+                }
+                else
+                {
+                    const int64_t elapsed = esp_timer_get_time() - button_down_tick;
+                    if (elapsed > 500000)
+                    {
+                        printf("ope\n");
+                        delay = 2000;
+                    }
+                }
                 auto stepper = steppers[active_button];
-                stepper->step(button_direction_up ? 1 : -1,
-                              5000);
+                stepper->start(button_direction_up, delay);
+            }
+            else
+            {
+                if (was_button_pressed)
+                {
+                    auto stepper = steppers[active_button];
+                    stepper->stop();
+                    was_button_pressed = false;
+                }
             }
         }
 #if 0
