@@ -15,6 +15,10 @@ const int NOF_MOTORS = 3;
 
 const int MAX_PWM = 1024; // must match timer resolution
 
+const bool USE_MICRO_STEPPING = true;
+// Must be a multiple of 4
+const int NOF_MICRO_STEPS = USE_MICRO_STEPPING ? 16 : 4;
+
 static bool step_enable[NOF_MOTORS];
 static bool step_forward[NOF_MOTORS];
 static int steps_left[NOF_MOTORS];
@@ -202,6 +206,7 @@ Stepper::Stepper(int _enable_pin)
 
 void Stepper::step(int nof_steps, uint64_t delay_us)
 {
+    nof_steps *= NOF_MICRO_STEPS;
 #if 0
     // interrupt driven
     
