@@ -133,6 +133,7 @@ void app_main(void)
                     if (elapsed > 500000)
                         delay = 2000;
                 }
+                ESP_LOGI(TAG, "Active: %d", active_button);
                 auto stepper = steppers[active_button];
                 stepper->start(button_direction_up, delay);
             }

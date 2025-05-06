@@ -103,14 +103,19 @@ static bool timer_isr_callback(gptimer_handle_t,
 {
     for (int motor = 0; motor < NOF_MOTORS; ++motor)
     {
-        if (!step_enable[motor])
-            continue;
-
         int enable = enable_pin[motor];
         const bool bank1 = enable >= 32;
         if (bank1)
             enable -= 32;
-        
+        if (!step_enable[motor])
+        {
+            if (bank1)
+                REG_WRITE(GPIO_OUT1_W1TC_REG, 1ULL << enable);
+            else
+                REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << enable);
+            continue;
+        }
+
         if (steps_left[motor] > 0)
         {
             --steps_left[motor];
