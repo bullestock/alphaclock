@@ -39,12 +39,11 @@ window.addEventListener('load', () => {
                     (is_mouse_down ? 'start' : 'stop'))
         let dview = new DataView(new ArrayBuffer(2))
         dview.setUint8(0, 0)
-        let arg = 0
+        let arg = Number(ident)
         if (is_up_button)
             arg |= 128
         if (is_mouse_down)
             arg |= 64
-        arg |= ident
         dview.setUint8(1, arg)
         ws.send(dview.buffer)
     }
