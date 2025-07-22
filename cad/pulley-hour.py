@@ -1,7 +1,7 @@
 from build123d import *
 from ocp_vscode import *
 
-outer_dia = 140
+outer_dia = 62
 hole_dia = 5.85
 slot_dia = 2
 thickness = 4.5

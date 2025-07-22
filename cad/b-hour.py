@@ -3,14 +3,14 @@ from ocp_vscode import *
 
 bearing_id = 20
 bearing_th = 4
-stem_h = 15
+stem_h = 15+4
 o_dia = 5.9
-i_dia = 3.1
+i_dia = 3.8
 b_crush = 0.45
 h_crush = 0.2
 rr = 0.5
 
-p_dia = 15
+p_dia = 18
 slot_dia = 2
 p_th = 4.5
 

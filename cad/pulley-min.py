@@ -1,7 +1,7 @@
 from build123d import *
 from ocp_vscode import *
 
-outer_dia = 130
+outer_dia = 58
 thickness = 4.5
 hole_dia = 5.8
 lip_thickness = 0.75
@@ -19,7 +19,7 @@ with BuildPart() as p:
     Cylinder(outer_dia/2, thickness)
     fillet(p.edges().sort_by(Axis.Z)[0], radius=0.25)
     Torus(outer_dia/2, slot_dia/2, mode=Mode.SUBTRACT)
-    # though hole
+    # through hole
     Cylinder(hole_dia/2, 10, 
              mode=Mode.SUBTRACT)
     # large hole

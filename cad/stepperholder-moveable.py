@@ -1,0 +1,46 @@
+# %%
+from build123d import *
+from ocp_vscode import *
+
+depth = 10
+mot_d = 19.8
+offset = 3
+width = 21.5
+hole_cc = 25
+flange_extend = 3
+flange_width = width + 4*flange_extend
+flange_th = 5
+factor = 0.8
+INSERT_R = 4/2
+z_offset = 1.5
+
+print(width + flange_extend)
+
+#print(f'Height {offset + mot_d * factor}')
+
+with BuildPart() as o:
+    with BuildSketch():
+        # flange
+        Rectangle(flange_width, depth)
+    extrude(amount=flange_th)
+    # insert holes
+    with BuildSketch(o.faces().sort_by(Axis.Z)[-1]):
+        with Locations([(-hole_cc/2, z_offset, 0), (hole_cc/2, z_offset, 0)]):
+            Circle(radius=3.4/2)
+    extrude(amount=-20, mode=Mode.SUBTRACT)
+    with BuildSketch(Plane.XY.offset(flange_th)):
+        # basic shape
+        Rectangle(width, depth)
+    extrude(amount=offset + mot_d * factor - flange_th)
+    # fillet
+    fillet(o.edges().filter_by(Axis.Z), radius=1)
+    fillet(o.edges().sort_by(Axis.Z)[-1], radius=1)
+    # motor hole
+    with BuildSketch(o.faces().sort_by(Axis.Y)[0]) as h:
+        with Locations([ (0, offset, 0) ]):
+            Circle(radius=mot_d/2)
+    extrude(amount=-width, mode=Mode.SUBTRACT)
+    
+
+show(o)    
+export_step(o.part, "stepperholder-moveable.step")
