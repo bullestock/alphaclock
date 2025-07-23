@@ -13,7 +13,7 @@ with BuildPart() as p:
     split(bisect_by=Plane.XZ.offset(0 / 2))
     split(bisect_by=Plane.YZ.offset(0 / 2))
     with BuildSketch(Plane.XY):
-        with Locations((od/2 - th, 2)):
+        with Locations((od/2 - 1.25*th, 2)):
             Rectangle(1.5, 10)
     extrude(amount=w)
 

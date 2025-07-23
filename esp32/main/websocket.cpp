@@ -12,11 +12,13 @@
 bool is_button_pressed = false;
 int active_button = 0;
 bool button_direction_up = false;
+bool is_button_fast = false;
 
 void handle_up_down_button(uint8_t arg)
 {
     const bool is_up_button = arg & 0x80;
     const bool is_mouse_down = arg & 0x40;
+    const bool is_fast = arg & 0x20;
     const int ident = arg & 0x03;
     if (ident > 2)
     {
@@ -32,6 +34,7 @@ void handle_up_down_button(uint8_t arg)
     {
         active_button = ident;
         button_direction_up = is_up_button;
+        is_button_fast = is_fast;
         is_button_pressed = true;
     }
     else

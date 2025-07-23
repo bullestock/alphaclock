@@ -11,6 +11,12 @@ window.addEventListener('load', () => {
     let minsDownBtn = byId('minsDown')
     let secsUpBtn = byId('secsUp')
     let secsDownBtn = byId('secsDown')
+    let hoursUpFastBtn = byId('hoursUpFast')
+    let hoursDownFastBtn = byId('hoursDownFast')
+    let minsUpFastBtn = byId('minsUpFast')
+    let minsDownFastBtn = byId('minsDownFast')
+    let secsUpFastBtn = byId('secsUpFast')
+    let secsDownFastBtn = byId('secsDownFast')
 
     ws.addEventListener('message', e => {
         console.log('WS msg: ' + e)
@@ -20,12 +26,18 @@ window.addEventListener('load', () => {
     const upButtons = {
         0: hoursUpBtn,
         1: minsUpBtn,
-        2: secsUpBtn
+        2: secsUpBtn,
+        10: hoursUpFastBtn,
+        11: minsUpFastBtn,
+        12: secsUpFastBtn
     }
     const downButtons = {
         0: hoursDownBtn,
         1: minsDownBtn,
-        2: secsDownBtn
+        2: secsDownBtn,
+        10: hoursDownFastBtn,
+        11: minsDownFastBtn,
+        12: secsDownFastBtn
     }
     const identifiers = {
         0: 'h',
@@ -33,7 +45,7 @@ window.addEventListener('load', () => {
         2: 's'
     }
 
-    function handleClick(is_up_button, is_mouse_down, ident) {
+    function handleClick(is_up_button, is_mouse_down, is_fast, ident) {
         console.log(identifiers[ident] + ' ' +
                     (is_up_button ? 'up' : 'down ') + ': ' + 
                     (is_mouse_down ? 'start' : 'stop'))
@@ -44,6 +56,8 @@ window.addEventListener('load', () => {
             arg |= 128
         if (is_mouse_down)
             arg |= 64
+        if (is_fast)
+            arg |= 32
         dview.setUint8(1, arg)
         ws.send(dview.buffer)
     }
@@ -51,24 +65,30 @@ window.addEventListener('load', () => {
     for (const ident in upButtons) {
         if (upButtons.hasOwnProperty(ident)) {
             const upBtn = upButtons[ident]
+            let kind = ident
+            let fast = false
+            if (ident >= 10) {
+                kind -= 10
+                fast = true
+            }
             upBtn.addEventListener('pointerdown', () => {
-                handleClick(true, true, ident)
+                handleClick(true, true, fast, kind)
             })
             upBtn.addEventListener('pointerup', () => {
-                handleClick(true, false, ident)
+                handleClick(true, false, fast, kind)
             })
             upBtn.addEventListener('pointerout', () => {
-                handleClick(true, false, ident)
+                handleClick(true, false, fast, kind)
             })
             const downBtn = downButtons[ident]
             downBtn.addEventListener('pointerdown', () => {
-                handleClick(false, true, ident)
+                handleClick(false, true, fast, kind)
             })
             downBtn.addEventListener('pointerup', () => {
-                handleClick(false, false, ident)
+                handleClick(false, false, fast, kind)
             })
             downBtn.addEventListener('pointerout', () => {
-                handleClick(false, false, ident)
+                handleClick(false, false, fast, kind)
             })
         }
     }

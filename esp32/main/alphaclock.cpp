@@ -105,8 +105,7 @@ void app_main(void)
     bool was_button_pressed = false;
     extern int active_button;
     extern bool button_direction_up;
-
-    int64_t button_down_tick = 0;
+    extern bool is_button_fast;
 
     Stepper* steppers[] = {
         &hours, &minutes, &seconds
@@ -119,20 +118,9 @@ void app_main(void)
         {
             if (is_button_pressed)
             {
-                int delay = 10000;
+                int delay = is_button_fast ? 2000 : 15000;
                 if (!was_button_pressed)
-                {
-                    // Remember time of initial button press
-                    button_down_tick = esp_timer_get_time();
                     was_button_pressed = true;
-                }
-                else
-                {
-                    // Increase speed if button pressed for more than ½ second
-                    const int64_t elapsed = esp_timer_get_time() - button_down_tick;
-                    if (elapsed > 500000)
-                        delay = 2000;
-                }
                 ESP_LOGI(TAG, "Active: %d", active_button);
                 auto stepper = steppers[active_button];
                 stepper->start(button_direction_up, delay);

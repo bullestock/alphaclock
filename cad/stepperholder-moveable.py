@@ -1,18 +1,19 @@
 # %%
 from build123d import *
 from ocp_vscode import *
+from defs import *
 
 depth = 10
 mot_d = 19.8
 offset = 3
-width = 21.5
-hole_cc = 25
+width = 25
+hole_cc = motor_bracket_cc
 flange_extend = 3
 flange_width = width + 4*flange_extend
 flange_th = 5
 factor = 0.8
 INSERT_R = 4/2
-z_offset = 1.5
+z_offset = 0 #1.5
 
 print(width + flange_extend)
 
@@ -23,7 +24,7 @@ with BuildPart() as o:
         # flange
         Rectangle(flange_width, depth)
     extrude(amount=flange_th)
-    # insert holes
+    # screw holes
     with BuildSketch(o.faces().sort_by(Axis.Z)[-1]):
         with Locations([(-hole_cc/2, z_offset, 0), (hole_cc/2, z_offset, 0)]):
             Circle(radius=3.4/2)
@@ -43,4 +44,4 @@ with BuildPart() as o:
     
 
 show(o)    
-export_step(o.part, "stepperholder-moveable.step")
+export_step(o.part, f"stepperholder-moveable-{z_offset}.step")

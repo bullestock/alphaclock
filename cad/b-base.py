@@ -1,9 +1,9 @@
 from build123d import *
 from ocp_vscode import *
+from defs import *
 
 th = 5
 cd = 25
-insert_r = 4.2/2
 
 with BuildPart() as p:
     Box(40, 40, th)
