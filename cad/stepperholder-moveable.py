@@ -7,7 +7,7 @@ depth = 10
 mot_d = 19.8
 offset = 3
 width = 25
-hole_cc = motor_bracket_cc
+hole_cc = 23 # motor_bracket_cc
 flange_extend = 3
 flange_width = width + 4*flange_extend
 flange_th = 5
@@ -17,18 +17,11 @@ z_offset = 0 #1.5
 
 print(width + flange_extend)
 
-#print(f'Height {offset + mot_d * factor}')
-
 with BuildPart() as o:
     with BuildSketch():
         # flange
         Rectangle(flange_width, depth)
     extrude(amount=flange_th)
-    # screw holes
-    with BuildSketch(o.faces().sort_by(Axis.Z)[-1]):
-        with Locations([(-hole_cc/2, z_offset, 0), (hole_cc/2, z_offset, 0)]):
-            Circle(radius=3.4/2)
-    extrude(amount=-20, mode=Mode.SUBTRACT)
     with BuildSketch(Plane.XY.offset(flange_th)):
         # basic shape
         Rectangle(width, depth)
@@ -41,6 +34,11 @@ with BuildPart() as o:
         with Locations([ (0, offset, 0) ]):
             Circle(radius=mot_d/2)
     extrude(amount=-width, mode=Mode.SUBTRACT)
+    # screw holes
+    with BuildSketch(o.faces().sort_by(Axis.Z)[0]):
+        with Locations([(-hole_cc/2, z_offset, 0), (hole_cc/2, z_offset, 0)]):
+            Circle(radius=3.4/2)
+    extrude(amount=-6, mode=Mode.SUBTRACT)
     
 
 show(o)    
