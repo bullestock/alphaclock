@@ -24,28 +24,6 @@ void app_main(void)
 
     const auto app_desc = esp_app_get_description();
     printf("AlphaClock v %s\n", app_desc->version);
-
-#if 0
-    int dir = 1;
-    while (1)
-    {
-        for (int i = 0; i < 5; ++i)
-        {
-            int64_t delay = 10000 + (10 - i)*10000;
-            printf("step %s %.1f ms\n",
-                   dir >= 0 ? "forward" : "backward",
-                   delay/1000.0);
-            hours.step(dir * 100, delay);
-            vTaskDelay(10 / portTICK_PERIOD_MS);
-            while (hours.busy())
-            {
-                vTaskDelay(10 / portTICK_PERIOD_MS);
-            }
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-        dir *= -1;
-    }
-#endif
     
     init_nvs();
 

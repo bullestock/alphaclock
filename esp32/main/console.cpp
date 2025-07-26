@@ -18,10 +18,22 @@
 
 extern Stepper hours, minutes, seconds;
 
+static int current_position[MOTOR_COUNT] = { 0, 0, 0 };
+
 static int reboot(int, char**)
 {
     printf("Reboot...\n");
     esp_restart();
+    return 0;
+}
+
+static int zero(int, char**)
+{
+    printf("Zeroing\n");
+
+    for (int i = 0; i < MOTOR_COUNT; ++i)
+        current_position[i] = 0;
+    
     return 0;
 }
 
@@ -42,7 +54,7 @@ static int test_motor(int argc, char** argv)
         return 1;
     }
     const auto motor = motor_args.motor->ival[0];
-    if (motor < 0 || motor > 3)
+    if (motor < 0 || motor >= MOTOR_COUNT)
     {
         printf("ERROR: Invalid motor: %d\n", motor);
         return 1;
@@ -56,6 +68,94 @@ static int test_motor(int argc, char** argv)
            motor, delay, steps);
 
     motors[motor]->step(steps, delay, true);
+
+    printf("Done\n");
+
+    return 0;
+}
+
+struct
+{
+    struct arg_str* hand;
+    struct arg_int* where;
+    struct arg_end* end;
+} hand_args;
+
+static int hand(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &hand_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, hand_args.end, argv[0]);
+        return 1;
+    }
+    const auto hand = hand_args.hand->sval[0];
+    int motor = 0;
+    if ((hand[0] == 'h') || (hand[0] == 'H'))
+        motor = 0;
+    else if ((hand[0] == 'm') || (hand[0] == 'M'))
+        motor = 1;
+    else if ((hand[0] == 's') || (hand[0] == 'S'))
+        motor = 2;
+    else
+    {
+        printf("ERROR: Invalid hand: %s\n", hand);
+        return 1;
+    }
+    const auto where = hand_args.where->ival[0];
+
+    Stepper* motors[] = { &hours, &minutes, &seconds };
+    
+    printf("Moving motor %d from %d to %d:\n",
+           motor, current_position[motor], where);
+
+    const int delay = 3000;
+
+    int diff = where - current_position[motor];
+    const auto& calibration = get_calibration(motor);
+    bool reverse = calibration.reverse;
+    if (diff > 30)
+    {
+        diff = 60 - diff;
+        reverse = !reverse;
+    }
+    const int steps = (reverse ? -1 : 1) * calibration.steps * diff / 60;
+    printf("%d steps\n", steps);
+    motors[motor]->step(steps, delay, true);
+
+    current_position[motor] = where;
+    
+    printf("Done\n");
+
+    return 0;
+}
+
+struct
+{
+    struct arg_int* motor;
+    struct arg_int* reverse;
+    struct arg_int* steps;
+    struct arg_end* end;
+} calibrate_args;
+
+static int calibrate(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &calibrate_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, calibrate_args.end, argv[0]);
+        return 1;
+    }
+    const auto motor = calibrate_args.motor->ival[0];
+    if (motor < 0 || motor >= MOTOR_COUNT)
+    {
+        printf("ERROR: Invalid motor: %d\n", motor);
+        return 1;
+    }
+    const auto reverse = calibrate_args.reverse->ival[0];
+    const auto steps = calibrate_args.steps->ival[0];
+
+    set_calibration(motor, reverse, steps);
 
     printf("Done\n");
 
@@ -171,7 +271,7 @@ void run_console()
 
     motor_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     motor_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
-    motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps)");
+    motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");
     motor_args.end = arg_end(2);
     const esp_console_cmd_t test_motor_cmd = {
         .command = "motor",
@@ -183,6 +283,46 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_cmd));
+
+    hand_args.hand = arg_str1(NULL, NULL, "<hand>", "Hand (h, m, s)");
+    hand_args.where = arg_int1(NULL, NULL, "<where>", "Where (0-59)");
+    hand_args.end = arg_end(2);
+    const esp_console_cmd_t hand_cmd = {
+        .command = "hand",
+        .help = "Set a hand to a position",
+        .hint = nullptr,
+        .func = &hand,
+        .argtable = &hand_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&hand_cmd));
+
+    calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
+    calibrate_args.reverse = arg_int1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
+    calibrate_args.steps = arg_int1(NULL, NULL, "<steps>", "Steps/revolution)");
+    calibrate_args.end = arg_end(2);
+    const esp_console_cmd_t calibrate_cmd = {
+        .command = "calibrate",
+        .help = "Calibrate motors",
+        .hint = nullptr,
+        .func = &calibrate,
+        .argtable = &calibrate_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&calibrate_cmd));
+
+    const esp_console_cmd_t zero_cmd = {
+        .command = "zero",
+        .help = "Set zero position",
+        .hint = nullptr,
+        .func = &zero,
+        .argtable = nullptr,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&zero_cmd));
 
     add_wifi_credentials_args.ssid = arg_str1(NULL, NULL, "<ssid>", "SSID");
     add_wifi_credentials_args.password = arg_strn(NULL, NULL, "<password>", 0, 1, "Password");

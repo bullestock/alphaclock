@@ -2,12 +2,23 @@
 
 #include "defs.h"
 
+struct calibration_data
+{
+    uint8_t motor;
+    uint8_t reverse;
+    uint16_t steps;
+};
+
 void init_nvs();
 
 wifi_creds_t get_wifi_creds();
 
 void clear_wifi_credentials();
 void add_wifi_credentials(const char* ssid, const char* password);
+
+void set_calibration(int motor, int reverse, int steps);
+
+const calibration_data& get_calibration(int motor);
 
 // Local Variables:
 // compile-command: "cd .. && idf.py build"

@@ -138,7 +138,9 @@ static const httpd_uri_t ws = {
     .method     = HTTP_GET,
     .handler    = ws_handler,
     .user_ctx   = nullptr,
-    .is_websocket = true
+    .is_websocket = true,
+    .handle_ws_control_frames = false,
+    .supported_subprotocol = 0,
 };
 
 static const httpd_uri_t root = {
@@ -146,7 +148,9 @@ static const httpd_uri_t root = {
     .method    = HTTP_GET,
     .handler   = root_get_handler,
     .user_ctx  = nullptr,
-    .is_websocket = false
+    .is_websocket = false,
+    .handle_ws_control_frames = false,
+    .supported_subprotocol = 0,
 };
 
 

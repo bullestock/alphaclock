@@ -11,19 +11,17 @@
 #include <esp_timer.h>
 #include <rom/gpio.h>
 
-const int NOF_MOTORS = 3;
-
 const int MAX_PWM = 1024; // must match timer resolution
 
 const bool USE_MICRO_STEPPING = true;
 // Must be a multiple of 4
 const int NOF_MICRO_STEPS = USE_MICRO_STEPPING ? 16 : 4;
 
-static bool step_enable[NOF_MOTORS];
-static bool step_forward[NOF_MOTORS];
-static int steps_left[NOF_MOTORS];
-static int current_phase[NOF_MOTORS];
-static int enable_pin[NOF_MOTORS];
+static bool step_enable[MOTOR_COUNT];
+static bool step_forward[MOTOR_COUNT];
+static int steps_left[MOTOR_COUNT];
+static int current_phase[MOTOR_COUNT];
+static int enable_pin[MOTOR_COUNT];
 static int count = 0;
 static bool timer_enabled = false;
 
@@ -101,7 +99,7 @@ static bool timer_isr_callback(gptimer_handle_t,
                                const gptimer_alarm_event_data_t*,
                                void*)
 {
-    for (int motor = 0; motor < NOF_MOTORS; ++motor)
+    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
     {
         int enable = enable_pin[motor];
         const bool bank1 = enable >= 32;
