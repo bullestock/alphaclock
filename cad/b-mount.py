@@ -2,16 +2,13 @@ from build123d import *
 from ocp_vscode import *
 from defs import *
 
-bearing_od = 27.25
-bearing_th = 4
-b_crush = 0.45
-
 bottom = (Align.CENTER, Align.CENTER, Align.MIN)
 
 with BuildPart() as p:
     Box(ow, ow, bearing_th, align=bottom)
     Cylinder(bearing_od/2 + b_crush/2, bearing_th, align=bottom,
              mode=Mode.SUBTRACT)
+    # crush ribs
     with BuildSketch(p.faces().sort_by(Axis.Z)[-1]) as sk:
         with PolarLocations(radius=bearing_od/2 + b_crush/2, count=10):
             Circle(b_crush)

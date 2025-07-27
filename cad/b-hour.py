@@ -17,7 +17,6 @@ p_th = 4.5
 
 bearing_clearance = 1
 
-#pulley_z = bearing_th + p_th/2 + bearing_clearance
 bearing_z = p_th
 
 bottom = (Align.CENTER, Align.CENTER, Align.MIN)
