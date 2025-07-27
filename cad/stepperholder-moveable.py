@@ -4,18 +4,16 @@ from ocp_vscode import *
 from defs import *
 
 depth = 10
-mot_d = 19.8
+mot_d = 19.7
 offset = 3
-width = 25
-hole_cc = 23 # motor_bracket_cc
-flange_extend = 3
-flange_width = width + 4*flange_extend
+width = 26
+hole_cc = motor_bracket_cc
+flange_extend = 18
+flange_width = width + flange_extend
 flange_th = 5
 factor = 0.8
 INSERT_R = 4/2
 z_offset = 0 #1.5
-
-print(width + flange_extend)
 
 with BuildPart() as o:
     with BuildSketch():
@@ -37,7 +35,7 @@ with BuildPart() as o:
     # screw holes
     with BuildSketch(o.faces().sort_by(Axis.Z)[0]):
         with Locations([(-hole_cc/2, z_offset, 0), (hole_cc/2, z_offset, 0)]):
-            Circle(radius=3.4/2)
+            RectangleRounded(3.4, 7, 1.65)
     extrude(amount=-6, mode=Mode.SUBTRACT)
     
 

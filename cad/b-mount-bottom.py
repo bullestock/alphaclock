@@ -16,11 +16,12 @@ with BuildPart() as p:
         with PolarLocations(radius=bearing_od/2 + b_crush/2, count=10):
             Circle(b_crush)
     extrude(amount=-bearing_th)
+    # stud holes
     with BuildSketch(p.faces().sort_by(Axis.Z)[-1]) as sk:
         with PolarLocations(radius=screw_radius, count=4, start_angle=45):
-            Circle(3.2/2)
+            Circle(6.5/2)
     extrude(amount=-bearing_th, mode=Mode.SUBTRACT)
     
 show(p)
 
-export_step(p.part, 'b-mount.step')
+export_step(p.part, 'b-mount-bottom.step')
