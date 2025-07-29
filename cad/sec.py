@@ -1,13 +1,11 @@
 from build123d import *
 from ocp_vscode import *
+from defs import *
 
-bearing_id = 12
-bearing_th = 4
 i_dia = 2.1
-b_crush = 0.45
 rr = 0.5
 
-p_dia = 22
+p_dia = 40
 slot_dia = 2
 p_th = 4.5
 
@@ -37,4 +35,4 @@ with BuildPart() as p:
 
 show(p)
 
-export_step(p.part, 'b-sec.step')
+export_step(p.part, 'sec.step')

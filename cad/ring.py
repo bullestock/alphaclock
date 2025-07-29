@@ -1,7 +1,7 @@
 from build123d import *
 from ocp_vscode import *
 
-od = 272+40*3.14
+od = 272+20 # was 10
 w = 35
 th = 2
 

@@ -27,4 +27,4 @@ with BuildPart() as p:
     
 show(p)
 
-export_step(p.part, 'b-spacer.step')
+export_step(p.part, 'spacer.step')

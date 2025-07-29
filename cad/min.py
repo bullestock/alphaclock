@@ -2,8 +2,6 @@ from build123d import *
 from ocp_vscode import *
 from defs import *
 
-bearing_id = 20
-bearing_th = 4
 stem_h = 14.5
 o_dia = 5.9
 i_dia = 3.1
@@ -42,4 +40,4 @@ with BuildPart() as p:
     
 show(p)
 
-export_step(p.part, 'b-min.step')
+export_step(p.part, 'min.step')

@@ -25,4 +25,4 @@ with BuildPart() as p:
     
 show(p)
 
-export_step(p.part, 'b-base.step')
+export_step(p.part, 'base.step')

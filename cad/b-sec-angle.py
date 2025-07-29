@@ -38,4 +38,4 @@ with BuildPart() as p:
     
 show(p)
 
-export_step(p.part, 'b-sec-angle.step')
+export_step(p.part, 'sec-angle.step')

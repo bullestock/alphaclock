@@ -20,4 +20,4 @@ with BuildPart() as p:
     
 show(p)
 
-export_step(p.part, 'b-mount.step')
+export_step(p.part, 'mount.step')

@@ -51,4 +51,4 @@ with BuildPart() as p:
     
 show(p)
 
-export_step(p.part, 'b-hour.step')
+export_step(p.part, 'hour.step')
