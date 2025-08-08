@@ -4,7 +4,7 @@ from defs import *
 
 stem_h = 14.5
 o_dia = 5.9
-i_dia = 3.1
+i_dia = 4.1
 b_crush = 0.45
 h_crush = 0.2
 rr = 0.5

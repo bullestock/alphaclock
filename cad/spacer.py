@@ -2,7 +2,7 @@ from build123d import *
 from ocp_vscode import *
 from defs import *
 
-th = 6
+th = 6.5
 cd = 60
 
 with BuildPart() as p:
