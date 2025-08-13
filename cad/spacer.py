@@ -3,7 +3,7 @@ from ocp_vscode import *
 from defs import *
 
 th = 6.5
-cd = 60
+cd = 70
 
 with BuildPart() as p:
     Box(ow, ow, th)
@@ -22,8 +22,13 @@ with BuildPart() as p:
     # side screw holes
     with BuildSketch(p.faces().sort_by(Axis.Y)[0]) as sk:
         with PolarLocations(radius=motor_bracket_cc/2, count=2, start_angle=90):
-            Circle(radius=3/2)
-    extrude(amount=-20, mode=Mode.SUBTRACT)
+            Circle(radius=2.8/2)
+    extrude(amount=-200, mode=Mode.SUBTRACT)
+    # side insert holes
+    with BuildSketch(p.faces().sort_by(Axis.Y)[0]) as sk:
+        with PolarLocations(radius=motor_bracket_cc/2, count=2, start_angle=90):
+            Circle(radius=3.8/2)
+    extrude(amount=-50, mode=Mode.SUBTRACT)
     
 show(p)
 

@@ -5,7 +5,7 @@ from defs import *
 i_dia = 2.1
 rr = 0.5
 
-p_dia = 40
+p_dia = 65
 slot_dia = 2
 p_th = 4.5
 

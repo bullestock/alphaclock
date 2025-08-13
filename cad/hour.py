@@ -5,13 +5,15 @@ from defs import *
 bearing_id = 20
 bearing_th = 4
 stem_h = 14.5
-o_dia = 5.9
-i_dia = 3.8
+o_dia1 = 5.9
+o_dia2 = 7
+mount_h = 1.5
+i_dia = 4.2
 b_crush = 0.45
 h_crush = 0.2
 rr = 0.5
 
-p_dia = 40
+p_dia = 65
 slot_dia = 2
 p_th = 4.5
 
@@ -36,13 +38,15 @@ with BuildPart() as p:
         with PolarLocations(radius=bearing_id/2 - b_crush/2 - 0.1, count=10):
             Circle(b_crush)
     extrude(amount=-(bearing_th - 2*rr))
+    # reinforced part
+    Cylinder(o_dia2/2 - h_crush/2, stem_h - mount_h, align=bottom)
     # mount for hand
-    Cylinder(o_dia/2 - h_crush/2, stem_h, align=bottom)
+    Cylinder(o_dia1/2 - h_crush/2, stem_h, align=bottom)
     e = p.edges().sort_by(Axis.Z)
     fillet([e[0], e[-1]], radius=rr)
     # hand crush ribs
     with BuildSketch(p.faces().sort_by(Axis.Z)[-1].offset(-rr)) as sk:
-        with PolarLocations(radius=o_dia/2 - h_crush/2, count=10):
+        with PolarLocations(radius=o_dia1/2 - h_crush/2, count=10):
             Circle(h_crush)
     extrude(amount=-2)
     # through hole

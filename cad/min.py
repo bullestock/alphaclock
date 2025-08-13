@@ -9,7 +9,7 @@ b_crush = 0.45
 h_crush = 0.2
 rr = 0.5
 
-p_dia = 40
+p_dia = 65
 slot_dia = 2
 p_th = 4.5
 
