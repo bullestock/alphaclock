@@ -18,7 +18,8 @@
 
 extern Stepper hours, minutes, seconds;
 
-static int current_position[MOTOR_COUNT] = { 0, 0, 0 };
+// In steps
+static double current_position[MOTOR_COUNT] = { 0.0, 0.0, 0.0 };
 
 static int reboot(int, char**)
 {
@@ -32,7 +33,7 @@ static int zero(int, char**)
     printf("Zeroing\n");
 
     for (int i = 0; i < MOTOR_COUNT; ++i)
-        current_position[i] = 0;
+        current_position[i] = 0.0;
     
     return 0;
 }
@@ -106,24 +107,28 @@ static int hand(int argc, char** argv)
 
     Stepper* motors[] = { &hours, &minutes, &seconds };
     
-    printf("Moving motor %d from %d to %d:\n",
-           motor, current_position[motor], where);
+    const auto& calibration = get_calibration(motor);
+    const double target_steps = calibration.steps * where / 60.0; // Absolute steps
+
+    printf("Moving motor %d from %.1f to %d (%.1f):\n",
+           motor, current_position[motor], where, target_steps);
 
     const int delay = 3000;
 
-    int diff = where - current_position[motor];
-    const auto& calibration = get_calibration(motor);
+    double diff_steps = target_steps - current_position[motor];
     bool reverse = calibration.reverse;
-    if (diff > 30)
+    if (diff_steps > calibration.steps/2.0)
     {
-        diff = 60 - diff;
+        printf("Forward: %.1f steps\n", diff_steps)
+        diff_steps = calibration.steps - diff_steps;
         reverse = !reverse;
+        printf("Reverse: %.1f steps\n", diff_steps)
     }
-    const int steps = (reverse ? -1 : 1) * calibration.steps * diff / 60;
+    const int steps = (reverse ? -1 : 1) * diff_steps;
     printf("%d steps\n", steps);
     motors[motor]->step(steps, delay, true);
 
-    current_position[motor] = where;
+    current_position[motor] = target_steps;
     
     printf("Done\n");
 
@@ -134,12 +139,24 @@ struct
 {
     struct arg_int* motor;
     struct arg_int* reverse;
-    struct arg_int* steps;
+    struct arg_dbl* steps;
     struct arg_end* end;
 } calibrate_args;
 
 static int calibrate(int argc, char** argv)
 {
+    if (argc <= 1)
+    {
+        printf("Calibration data:\n");
+        for (int i = 0; i < MOTOR_COUNT; ++i)
+        {
+            const auto& calibration = get_calibration(i);
+            printf("%d  %1d  %5.1f\n", i,
+                   calibration.reverse,
+                   calibration.steps);
+        }
+        return 0;
+    }
     int nerrors = arg_parse(argc, argv, (void**) &calibrate_args);
     if (nerrors != 0)
     {
@@ -153,7 +170,7 @@ static int calibrate(int argc, char** argv)
         return 1;
     }
     const auto reverse = calibrate_args.reverse->ival[0];
-    const auto steps = calibrate_args.steps->ival[0];
+    const auto steps = calibrate_args.steps->dval[0];
 
     set_calibration(motor, reverse, steps);
 
@@ -300,7 +317,7 @@ void run_console()
 
     calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     calibrate_args.reverse = arg_int1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
-    calibrate_args.steps = arg_int1(NULL, NULL, "<steps>", "Steps/revolution)");
+    calibrate_args.steps = arg_dbl1(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
     calibrate_args.end = arg_end(2);
     const esp_console_cmd_t calibrate_cmd = {
         .command = "calibrate",

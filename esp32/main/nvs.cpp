@@ -37,7 +37,7 @@ void add_wifi_credentials(const char* ssid, const char* password)
     nvs_close(my_handle);
 }
 
-void set_calibration(int motor, int reverse, int steps)
+void set_calibration(int motor, int reverse, double steps)
 {
     calibration[motor].reverse = reverse;
     calibration[motor].steps = steps;
@@ -121,13 +121,9 @@ void init_nvs()
             calibration[i].steps = 100;
         }
     }
-    else
-    {
-        printf("Calibration data:\n");
-        for (int i = 0; i < MOTOR_COUNT; ++i)
-            printf("%d  %1d  %5d\n", i,
-                   calibration[i].reverse,
-                   calibration[i].steps);
-    }
     nvs_close(my_handle);
 }
+
+// Local Variables:
+// compile-command: "cd .. && idf.py build"
+// End:
