@@ -24,4 +24,10 @@ constexpr const char* TAG = "ACLK";
 
 constexpr const int MOTOR_COUNT = 3;
 
+enum Mode {
+    MODE_MANUAL,
+    MODE_NORMAL,
+    MODE_FAST,
+};
+
 using wifi_creds_t = std::vector<std::pair<std::string, std::string>>;

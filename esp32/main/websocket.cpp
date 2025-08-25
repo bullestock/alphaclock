@@ -13,6 +13,7 @@ bool is_button_pressed = false;
 int active_button = 0;
 bool button_direction_up = false;
 bool is_button_fast = false;
+Mode active_mode = MODE_MANUAL;
 
 void handle_up_down_button(uint8_t arg)
 {
@@ -39,6 +40,17 @@ void handle_up_down_button(uint8_t arg)
     }
     else
         is_button_pressed = false;
+}
+
+void handle_mode_button(uint8_t arg)
+{
+    if (arg > MODE_FAST)
+    {
+        ESP_LOGE(TAG, "Invalid mode %d", arg);
+        return;
+    }
+    ESP_LOGI(TAG, "Change to mode %d", arg);
+    active_mode = static_cast<Mode>(arg);
 }
 
 static esp_err_t ws_handler(httpd_req_t *req)
@@ -92,7 +104,14 @@ static esp_err_t ws_handler(httpd_req_t *req)
         switch (ws_pkt.payload[0])
         {
         case 0:
-            handle_up_down_button(ws_pkt.payload[1]);
+            // Manual control
+            if (active_mode == MODE_MANUAL)
+                handle_up_down_button(ws_pkt.payload[1]);
+            break;
+
+        case 1:
+            // Set mode
+            handle_mode_button(ws_pkt.payload[1]);
             break;
 
         default:
@@ -100,11 +119,6 @@ static esp_err_t ws_handler(httpd_req_t *req)
             break;
         }
     }
-    /*
-    ret = httpd_ws_send_frame(req, &ws_pkt);
-    if (ret != ESP_OK)
-        ESP_LOGE(TAG, "httpd_ws_send_frame failed with %d", ret);
-    */
     free(buf);
     return ret;
 }

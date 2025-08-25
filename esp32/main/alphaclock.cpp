@@ -77,13 +77,12 @@ void app_main(void)
 
     start_webserver();
 
-    bool is_running = false;
-
     extern bool is_button_pressed;
     bool was_button_pressed = false;
     extern int active_button;
     extern bool button_direction_up;
     extern bool is_button_fast;
+    extern Mode active_mode;
 
     Stepper* steppers[] = {
         &hours, &minutes, &seconds
@@ -92,8 +91,9 @@ void app_main(void)
     while (1)
     {
         vTaskDelay(1);
-        if (!is_running)
+        switch (active_mode)
         {
+        case MODE_MANUAL:
             if (is_button_pressed)
             {
                 int delay = is_button_fast ? 2000 : 15000;
@@ -112,6 +112,9 @@ void app_main(void)
                     was_button_pressed = false;
                 }
             }
+
+        default:
+            break;
         }
     }
 }

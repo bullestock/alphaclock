@@ -5,6 +5,10 @@ window.addEventListener('load', () => {
     let ws = new WebSocket('ws://' + window.location.host + '/ws')
     ws.binaryType = 'arraybuffer'
 
+    let manBtn = byId('manual')
+    let normBtn = byId('normal')
+    let fastBtn = byId('fast')
+    
     let hoursUpBtn = byId('hoursUp')
     let hoursDownBtn = byId('hoursDown')
     let minsUpBtn = byId('minsUp')
@@ -45,6 +49,13 @@ window.addEventListener('load', () => {
         2: 's'
     }
 
+    function handleModeClick(ident) {
+        let dview = new DataView(new ArrayBuffer(2))
+        dview.setUint8(0, 1)
+        dview.setUint8(1, Number(ident))
+        ws.send(dview.buffer)
+    }
+
     function handleClick(is_up_button, is_mouse_down, is_fast, ident) {
         console.log(identifiers[ident] + ' ' +
                     (is_up_button ? 'up' : 'down ') + ': ' + 
@@ -62,6 +73,16 @@ window.addEventListener('load', () => {
         ws.send(dview.buffer)
     }
 
+    manBtn.addEventListener('pointerdown', () => {
+        handleModeClick(0)
+    })
+    normBtn.addEventListener('pointerdown', () => {
+        handleModeClick(1)
+    })
+    fastBtn.addEventListener('pointerdown', () => {
+        handleModeClick(2)
+    })
+    
     for (const ident in upButtons) {
         if (upButtons.hasOwnProperty(ident)) {
             const upBtn = upButtons[ident]

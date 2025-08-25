@@ -5,7 +5,6 @@
 #include "stepper.h"
 
 #include <cmath>
-//#include <string.h>
 
 #include "esp_system.h"
 #include "esp_log.h"
@@ -115,7 +114,7 @@ static int hand(int argc, char** argv)
     printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
            motor, calibration.steps, current_position[motor], target_steps, where);
 
-    const int delay = 3000;
+    const int delay = 5000;
 
     int diff_steps = target_steps - current_position[motor];
     bool reverse = calibration.reverse;
