@@ -146,7 +146,7 @@ void handle_normal_mode()
     struct tm tm;
     localtime_r(&t, &tm);
 
-    h_hours.go_to(tm.tm_hour * 60/12);
+    h_hours.go_to_hour(tm.tm_hour);
     h_minutes.go_to(tm.tm_min);
     h_seconds.go_to(tm.tm_sec);
 }
@@ -174,7 +174,7 @@ void handle_fast_mode()
     struct tm tm;
     localtime_r(&cur_time, &tm);
 
-    h_hours.go_to(tm.tm_hour * 60/12);
+    h_hours.go_to_hour(tm.tm_hour);
     h_minutes.go_to(tm.tm_min);
     h_seconds.go_to(tm.tm_sec);
 

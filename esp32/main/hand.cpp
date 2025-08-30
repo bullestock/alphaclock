@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#include "esp_system.h"
+
 Hand::Hand(Stepper& m)
     : motor(m)
 {
@@ -43,6 +45,34 @@ void Hand::go_to(int position)
 
         current_position = target_steps;
     }
+}
+
+static const int hour_map[12] = {
+    10, // 0/12
+    1,  // 1
+    9,  // 2
+    11, // 3
+    3,  // 4
+    2,  // 5
+    6, // 6
+    7, // 7
+    5, // 8
+    4, // 9
+    8, // 10
+    0, // 11
+};
+    
+void Hand::go_to_hour(int hour)
+{
+    if (hour >= 12)
+        hour -= 12;
+    if (hour >= 12)
+    {
+        printf("Fatal error: hour %d\n", hour);
+        esp_restart();
+    }
+    int position = hour_map[hour] * 60/12;
+    go_to(position);
 }
 
 // Local Variables:
