@@ -24,7 +24,13 @@ Stepper s_hours(PIN_EN1), s_minutes(PIN_EN2), s_seconds(PIN_EN3);
 Hand h_hours(s_hours);
 Hand h_minutes(s_minutes);
 Hand h_seconds(s_seconds);
-    
+
+extern int active_button;
+extern bool button_direction_up;
+extern bool is_button_fast;
+extern Mode active_mode;
+extern HourMode active_hour_mode;
+
 extern "C"
 void app_main(void)
 {
@@ -87,10 +93,6 @@ void app_main(void)
 
     extern bool is_button_pressed;
     bool was_button_pressed = false;
-    extern int active_button;
-    extern bool button_direction_up;
-    extern bool is_button_fast;
-    extern Mode active_mode;
 
     Stepper* steppers[] = {
         &s_hours, &s_minutes, &s_seconds
@@ -146,7 +148,10 @@ void handle_normal_mode()
     struct tm tm;
     localtime_r(&t, &tm);
 
-    h_hours.go_to_hour(tm.tm_hour);
+    int fraction = 0;
+    if (active_hour_mode == HOUR_MODE_CONTINUOUS)
+        fraction = tm.tm_min;
+    h_hours.go_to_hour(tm.tm_hour, fraction);
     h_minutes.go_to(tm.tm_min);
     h_seconds.go_to(tm.tm_sec);
 }
@@ -174,7 +179,10 @@ void handle_fast_mode()
     struct tm tm;
     localtime_r(&cur_time, &tm);
 
-    h_hours.go_to_hour(tm.tm_hour);
+    int fraction = 0;
+    if (active_hour_mode == HOUR_MODE_CONTINUOUS)
+        fraction = tm.tm_min;
+    h_hours.go_to_hour(tm.tm_hour, fraction);
     h_minutes.go_to(tm.tm_min);
     h_seconds.go_to(tm.tm_sec);
 

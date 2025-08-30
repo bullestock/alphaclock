@@ -14,6 +14,7 @@ int active_button = 0;
 bool button_direction_up = false;
 bool is_button_fast = false;
 Mode active_mode = MODE_MANUAL;
+HourMode active_hour_mode = HOUR_MODE_DISCRETE;
 
 void handle_up_down_button(uint8_t arg)
 {
@@ -40,6 +41,17 @@ void handle_up_down_button(uint8_t arg)
     }
     else
         is_button_pressed = false;
+}
+
+void handle_hour_mode_button(uint8_t arg)
+{
+    if (arg > HOUR_MODE_CONTINUOUS)
+    {
+        ESP_LOGE(TAG, "Invalid hour mode %d", arg);
+        return;
+    }
+    ESP_LOGI(TAG, "Change to hour mode %d", arg);
+    active_hour_mode = static_cast<HourMode>(arg);
 }
 
 void handle_mode_button(uint8_t arg)
@@ -112,6 +124,11 @@ static esp_err_t ws_handler(httpd_req_t *req)
         case 1:
             // Set mode
             handle_mode_button(ws_pkt.payload[1]);
+            break;
+
+        case 2:
+            // Set hour mode
+            handle_hour_mode_button(ws_pkt.payload[1]);
             break;
 
         default:

@@ -8,7 +8,10 @@ window.addEventListener('load', () => {
     let manBtn = byId('manual')
     let normBtn = byId('normal')
     let fastBtn = byId('fast')
-    
+
+    let discBtn = byId('discrete')
+    let contBtn = byId('continuous')
+
     let hoursUpBtn = byId('hoursUp')
     let hoursDownBtn = byId('hoursDown')
     let minsUpBtn = byId('minsUp')
@@ -49,10 +52,17 @@ window.addEventListener('load', () => {
         2: 's'
     }
 
-    function handleModeClick(ident) {
+    function handleModeClick(mode) {
         let dview = new DataView(new ArrayBuffer(2))
         dview.setUint8(0, 1)
-        dview.setUint8(1, Number(ident))
+        dview.setUint8(1, Number(mode))
+        ws.send(dview.buffer)
+    }
+
+    function handleHourModeClick(mode) {
+        let dview = new DataView(new ArrayBuffer(2))
+        dview.setUint8(0, 2)
+        dview.setUint8(1, Number(mode))
         ws.send(dview.buffer)
     }
 
@@ -81,6 +91,13 @@ window.addEventListener('load', () => {
     })
     fastBtn.addEventListener('pointerdown', () => {
         handleModeClick(2)
+    })
+
+    discBtn.addEventListener('pointerdown', () => {
+        handleHourModeClick(0)
+    })
+    contBtn.addEventListener('pointerdown', () => {
+        handleHourModeClick(1)
     })
     
     for (const ident in upButtons) {

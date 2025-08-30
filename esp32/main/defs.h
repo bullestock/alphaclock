@@ -30,4 +30,13 @@ enum Mode {
     MODE_FAST,
 };
 
+enum HourMode {
+    HOUR_MODE_DISCRETE,
+    HOUR_MODE_CONTINUOUS,
+};
+
 using wifi_creds_t = std::vector<std::pair<std::string, std::string>>;
+
+// Local Variables:
+// compile-command: "cd .. && idf.py build"
+// End:

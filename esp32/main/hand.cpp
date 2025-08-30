@@ -62,7 +62,7 @@ static const int hour_map[12] = {
     0, // 11
 };
     
-void Hand::go_to_hour(int hour)
+void Hand::go_to_hour(int hour, int fraction)
 {
     if (hour >= 12)
         hour -= 12;
@@ -71,7 +71,7 @@ void Hand::go_to_hour(int hour)
         printf("Fatal error: hour %d\n", hour);
         esp_restart();
     }
-    int position = hour_map[hour] * 60/12;
+    int position = hour_map[hour] * 60/12 + fraction/12;
     go_to(position);
 }
 

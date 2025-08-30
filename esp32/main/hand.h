@@ -15,7 +15,8 @@ public:
     void go_to(int position);
 
     // Move to remapped hour 0-12
-    void go_to_hour(int hour);
+    // Fraction is fractional hours (0-59)
+    void go_to_hour(int hour, int fraction);
 
 private:
     Stepper& motor;
