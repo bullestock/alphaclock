@@ -9,12 +9,16 @@
 #include "websocket.h"
 
 #include <stdio.h>
+#include <time.h>
 
 #include <esp_app_desc.h>
 #include <esp_event.h>
 #include <esp_log.h>
 #include <esp_timer.h>
 #include <esp_wifi.h>
+
+void handle_normal_mode();
+void handle_fast_mode();
 
 Stepper s_hours(PIN_EN1), s_minutes(PIN_EN2), s_seconds(PIN_EN3);
 Hand h_hours(s_hours);
@@ -116,11 +120,65 @@ void app_main(void)
                     was_button_pressed = false;
                 }
             }
+            break;
 
-        default:
+        case MODE_NORMAL:
+            handle_normal_mode();
+            break;
+            
+        case MODE_FAST:
+            handle_fast_mode();
             break;
         }
     }
+}
+
+void handle_normal_mode()
+{
+    static time_t last_time = 0;
+    
+    time_t t;
+    time(&t);
+    if (t == last_time)
+        return;
+
+    last_time = t;
+    struct tm tm;
+    localtime_r(&t, &tm);
+
+    h_hours.go_to(tm.tm_hour * 60/12);
+    h_minutes.go_to(tm.tm_min);
+    h_seconds.go_to(tm.tm_sec);
+}
+
+void handle_fast_mode()
+{
+    static bool first = true;
+    static time_t cur_time = 0;
+    static int64_t last_tick = 0;
+    
+    if (first)
+    {
+        // Start at current time
+        time(&cur_time);
+        first = false;
+        last_tick = esp_timer_get_time();
+        return;
+    }
+
+    const auto cur_tick = esp_timer_get_time();
+    if (cur_tick - last_tick < 100000)
+        return;
+    last_tick = cur_tick;
+    
+    struct tm tm;
+    localtime_r(&cur_time, &tm);
+
+    h_hours.go_to(tm.tm_hour * 60/12);
+    h_minutes.go_to(tm.tm_min);
+    h_seconds.go_to(tm.tm_sec);
+
+    ++cur_time;
 }
 
 // Local Variables:
