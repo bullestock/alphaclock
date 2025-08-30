@@ -23,4 +23,18 @@ void initialize_sntp()
         ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
+
+    // Europe/Copenhagen
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    tzset();
+
+    time_t t;
+    time(&t);
+    struct tm tm;
+    localtime_r(&t, &tm);
+    printf("Local time is %02d:%02d:%02d\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
 }
+
+// Local Variables:
+// compile-command: "cd .. && idf.py build"
+// End:
