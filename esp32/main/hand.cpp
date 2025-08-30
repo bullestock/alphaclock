@@ -27,9 +27,7 @@ void Hand::go_to(int position)
 
     int diff_steps = target_steps - current_position;
     bool reverse = calibration.reverse;
-    if (diff_steps < 0)
-        reverse = !reverse;
-    printf("diff %d\n", diff_steps);
+    printf("diff %d reverse %d\n", diff_steps, reverse);
     if (std::abs(diff_steps) > calibration.steps/2.0)
     {
         printf("Forward: %d steps reverse %d\n", diff_steps, reverse);
