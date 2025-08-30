@@ -148,6 +148,8 @@ void handle_normal_mode()
     struct tm tm;
     localtime_r(&t, &tm);
 
+    printf("Normal: %02d:%02d:%02d\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
+
     int fraction = 0;
     if (active_hour_mode == HOUR_MODE_CONTINUOUS)
         fraction = tm.tm_min;
@@ -178,6 +180,8 @@ void handle_fast_mode()
     
     struct tm tm;
     localtime_r(&cur_time, &tm);
+
+    printf("Fast: %02d:%02d:%02d\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
 
     int fraction = 0;
     if (active_hour_mode == HOUR_MODE_CONTINUOUS)
