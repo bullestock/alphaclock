@@ -207,6 +207,16 @@ Stepper::Stepper(int _enable_pin)
     enable_pin[count++] = _enable_pin;
 }
 
+int Stepper::get_index() const
+{
+    return motor;
+}
+
+const calibration_data& Stepper::get_calibration()
+{
+    return ::get_calibration(motor);
+}
+
 void enable_timer()
 {
     gptimer_event_callbacks_t cbs = {

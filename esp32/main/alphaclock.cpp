@@ -1,6 +1,7 @@
 #include "connect.h"
 #include "console.h"
 #include "defs.h"
+#include "hand.h"
 #include "hw.h"
 #include "nvs.h"
 #include "sntp.h"
@@ -15,8 +16,11 @@
 #include <esp_timer.h>
 #include <esp_wifi.h>
 
-Stepper hours(PIN_EN1), minutes(PIN_EN2), seconds(PIN_EN3);
-
+Stepper s_hours(PIN_EN1), s_minutes(PIN_EN2), s_seconds(PIN_EN3);
+Hand h_hours(s_hours);
+Hand h_minutes(s_minutes);
+Hand h_seconds(s_seconds);
+    
 extern "C"
 void app_main(void)
 {
@@ -33,7 +37,7 @@ void app_main(void)
         ESP_ERROR_CHECK(esp_netif_init());
         ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-        int attempts_left = 5;
+        int attempts_left = 2;
         bool connected = false;
         while (!connected && attempts_left)
         {
@@ -85,7 +89,7 @@ void app_main(void)
     extern Mode active_mode;
 
     Stepper* steppers[] = {
-        &hours, &minutes, &seconds
+        &s_hours, &s_minutes, &s_seconds
     };
 
     while (1)

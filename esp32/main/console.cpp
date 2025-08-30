@@ -1,10 +1,9 @@
 #include "console.h"
 #include "defs.h"
+#include "hand.h"
 #include "hw.h"
 #include "nvs.h"
 #include "stepper.h"
-
-#include <cmath>
 
 #include "esp_system.h"
 #include "esp_log.h"
@@ -16,10 +15,8 @@
 #include "linenoise/linenoise.h"
 #include "argtable3/argtable3.h"
 
-extern Stepper hours, minutes, seconds;
-
-// In steps (0 through N-1, where N is steps/revolution)
-static int current_position[MOTOR_COUNT] = { 0, 0, 0 };
+extern Stepper s_hours, s_minutes, s_seconds;
+extern Hand h_hours, h_minutes, h_seconds;
 
 static int reboot(int, char**)
 {
@@ -32,8 +29,9 @@ static int zero(int, char**)
 {
     printf("Zeroing\n");
 
-    for (int i = 0; i < MOTOR_COUNT; ++i)
-        current_position[i] = 0;
+    h_hours.zero();
+    h_minutes.zero();
+    h_seconds.zero();
     
     return 0;
 }
@@ -63,7 +61,7 @@ static int test_motor(int argc, char** argv)
     const auto delay = motor_args.delay->ival[0];
     const auto steps = motor_args.steps->ival[0];
 
-    Stepper* motors[] = { &hours, &minutes, &seconds };
+    Stepper* motors[] = { &s_hours, &s_minutes, &s_seconds };
     
     printf("Stepping motor %d at %d us: %d\n",
            motor, delay, steps);
@@ -91,13 +89,13 @@ static int hand(int argc, char** argv)
         return 1;
     }
     const auto hand = hand_args.hand->sval[0];
-    int motor = 0;
+    Hand* h = nullptr;
     if ((hand[0] == 'h') || (hand[0] == 'H'))
-        motor = 0;
+        h = &h_hours;
     else if ((hand[0] == 'm') || (hand[0] == 'M'))
-        motor = 1;
+        h = &h_minutes;
     else if ((hand[0] == 's') || (hand[0] == 'S'))
-        motor = 2;
+        h = &h_seconds;
     else
     {
         printf("ERROR: Invalid hand: %s\n", hand);
@@ -105,37 +103,8 @@ static int hand(int argc, char** argv)
     }
     const auto where = hand_args.where->ival[0];
 
-    Stepper* motors[] = { &hours, &minutes, &seconds };
+    h->go_to(where);
 
-    // Compute new absolute position
-    const auto& calibration = get_calibration(motor);
-    const int target_steps = std::round(calibration.steps * where / 60.0);
-
-    printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
-           motor, calibration.steps, current_position[motor], target_steps, where);
-
-    const int delay = 5000;
-
-    int diff_steps = target_steps - current_position[motor];
-    bool reverse = calibration.reverse;
-    if (diff_steps < 0)
-        reverse = !reverse;
-    printf("diff %d\n", diff_steps);
-    if (std::abs(diff_steps) > calibration.steps/2.0)
-    {
-        printf("Forward: %d steps reverse %d\n", diff_steps, reverse);
-        diff_steps = std::round(calibration.steps - std::abs(diff_steps));
-        reverse = !reverse;
-        printf("Reverse: %d steps reverse %d\n", diff_steps, reverse);
-    }
-    const int steps = (reverse ? -1 : 1) * diff_steps;
-    printf("%d steps\n", steps);
-    if (std::abs(steps) > 0)
-    {
-        motors[motor]->step(steps, delay, true);
-
-        current_position[motor] = target_steps;
-    }
     printf("Done\n");
 
     return 0;
