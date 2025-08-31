@@ -58,6 +58,7 @@ void Hand::go_to(int position)
     }
 }
 
+// Hour hand mapping for Danish
 static const int hour_map[12] = {
     10, // 0/12
     1,  // 1

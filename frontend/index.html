@@ -10,12 +10,18 @@
           td {
               padding: 3mm;
           }
-          button {
+          .funcbutton {
+              font-size: 28px;
+              height: 40px;
+              width: 100px;
+          }
+          .updnbutton {
               font-size: 28px;
               height: 80px;
               width: 100px;
           }
-          #heading {
+          .heading {
+              text-align: center;
               font-size: 36px;
               font-weight: bold;
           }
@@ -23,48 +29,56 @@
     </head>
 
     <body>
-        <div id='heading'>
+        <div class='heading'>
             <div class='largetxt left'>Alphaclock</div>
         </div>
         <div>&nbsp;</div>
         <table style="margin-left: auto; margin-right: auto;">
           <tr>
-            <td><button id='manual'>Man</button></td>
-            <td><button id='normal'>Norm</button></td>
-            <td><button id='fast'>Fast</button></td>
+            <td><button id="manual" class="funcbutton">Man</button></td>
+            <td><button id="normal" class="funcbutton">Norm</button></td>
+            <td><button id="fast" class="funcbutton">Fast</button></td>
           </tr>
         </table>
         <hr>
         <table style="margin-left: auto; margin-right: auto;">
           <tr>
-            <td><button id='discrete'>Disc</button></td>
-            <td><button id='continuous'>Cont</button></td>
+            <td><button id="discrete" class="funcbutton">Disc</button></td>
+            <td><button id="continuous" class="funcbutton">Cont</button></td>
           </tr>
         </table>
         <hr>
         <table style="margin-left: auto; margin-right: auto;">
           <tr>
-            <td><button id='hoursUp'>↑<br>hours</button></td>
-            <td><button id='minsUp'>↑<br>mins</button></td>
-            <td><button id='secsUp'>↑<br>secs</button></td>
+            <td><button class="updnbutton" id="hoursUp">↑<br>hours</button></td>
+            <td><button class="updnbutton" id="minsUp">↑<br>mins</button></td>
+            <td><button class="updnbutton" id="secsUp">↑<br>secs</button></td>
           </tr>
           <tr>
-            <td><button id='hoursDown'>hours<br>↓</button></td>
-            <td><button id='minsDown'>mins<br>↓</button></td>
-            <td><button id='secsDown'>secs<br>↓</button></td>
+            <td><button class="updnbutton" id="hoursDown">hours<br>↓</button></td>
+            <td><button class="updnbutton" id="minsDown">mins<br>↓</button></td>
+            <td><button class="updnbutton" id="secsDown">secs<br>↓</button></td>
           </tr>
           <tr>
-            <td><button id='hoursUpFast'>↑↑<br>hours</button></td>
-            <td><button id='minsUpFast'>↑↑<br>mins</button></td>
-            <td><button id='secsUpFast'>↑↑<br>secs</button></td>
+            <td><button class="updnbutton" id="hoursUpFast">↑↑<br>hours</button></td>
+            <td><button class="updnbutton" id="minsUpFast">↑↑<br>mins</button></td>
+            <td><button class="updnbutton" id="secsUpFast">↑↑<br>secs</button></td>
           </tr>
           <tr>
-            <td><button id='hoursDownFast'>hours<br>↓↓</button></td>
-            <td><button id='minsDownFast'>mins<br>↓↓</button></td>
-            <td><button id='secsDownFast'>secs<br>↓↓</button></td>
+            <td><button class="updnbutton" id="hoursDownFast">hours<br>↓↓</button></td>
+            <td><button class="updnbutton" id="minsDownFast">mins<br>↓↓</button></td>
+            <td><button class="updnbutton" id="secsDownFast">secs<br>↓↓</button></td>
+          </tr>
+        </table>
+        <hr>
+        <table style="margin-left: auto; margin-right: auto;">
+          <tr>
+            <td><button class="funcbutton" id="hoursZero">Zero</button></td>
+            <td><button class="funcbutton" id="minsZero">Zero</button></td>
+            <td><button class="funcbutton" id="secsZero">Zero</button></td>
           </tr>
         </table>
 
-        <script src='index.js'></script>
+        <script src="index.js"></script>
     </body>
 </html>

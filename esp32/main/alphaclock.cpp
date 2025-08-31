@@ -19,6 +19,7 @@
 
 void handle_normal_mode();
 void handle_fast_mode();
+void handle_zero();
 
 Stepper s_hours(PIN_EN1), s_minutes(PIN_EN2), s_seconds(PIN_EN3);
 Hand h_hours(s_hours);
@@ -30,6 +31,7 @@ extern bool button_direction_up;
 extern bool is_button_fast;
 extern Mode active_mode;
 extern HourMode active_hour_mode;
+extern bool set_zero[MOTOR_COUNT];
 
 extern "C"
 void app_main(void)
@@ -125,14 +127,40 @@ void app_main(void)
             break;
 
         case MODE_NORMAL:
+            handle_zero();
             handle_normal_mode();
             break;
             
         case MODE_FAST:
+            handle_zero();
             handle_fast_mode();
             break;
         }
     }
+}
+
+Hand& get_hand(int hand)
+{
+    switch (hand)
+    {
+    case 0:
+        return h_hours;
+    case 1:
+        return h_minutes;
+    default:
+        return h_seconds;
+    }
+}
+
+void handle_zero()
+{
+    for (int i = 0; i < MOTOR_COUNT; ++i)
+        if (set_zero[i])
+        {
+            printf("Reset hand %d\n", i);
+            set_zero[i] = false;
+            get_hand(i).zero();
+        }
 }
 
 void handle_normal_mode()

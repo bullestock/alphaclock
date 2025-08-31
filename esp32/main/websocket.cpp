@@ -15,6 +15,7 @@ bool button_direction_up = false;
 bool is_button_fast = false;
 Mode active_mode = MODE_MANUAL;
 HourMode active_hour_mode = HOUR_MODE_DISCRETE;
+bool set_zero[MOTOR_COUNT];
 
 void handle_up_down_button(uint8_t arg)
 {
@@ -22,9 +23,9 @@ void handle_up_down_button(uint8_t arg)
     const bool is_mouse_down = arg & 0x40;
     const bool is_fast = arg & 0x20;
     const int ident = arg & 0x03;
-    if (ident > 2)
+    if (ident >= MOTOR_COUNT)
     {
-        ESP_LOGE(TAG, "Invalid ident %d", ident);
+        ESP_LOGE(TAG, "Invalid up/down ident %d", ident);
         return;
     }
     static const char* identifiers = "hms";
@@ -63,6 +64,17 @@ void handle_mode_button(uint8_t arg)
     }
     ESP_LOGI(TAG, "Change to mode %d", arg);
     active_mode = static_cast<Mode>(arg);
+}
+
+void handle_zero_button(uint8_t arg)
+{
+    if (arg >= MOTOR_COUNT)
+    {
+        ESP_LOGE(TAG, "Invalid zero hand %d", arg);
+        return;
+    }
+    ESP_LOGI(TAG, "Zero hand %d", arg);
+    set_zero[arg] = true;
 }
 
 static esp_err_t ws_handler(httpd_req_t *req)
@@ -129,6 +141,11 @@ static esp_err_t ws_handler(httpd_req_t *req)
         case 2:
             // Set hour mode
             handle_hour_mode_button(ws_pkt.payload[1]);
+            break;
+
+        case 3:
+            // Set zero
+            handle_zero_button(ws_pkt.payload[1]);
             break;
 
         default:

@@ -1,7 +1,7 @@
 from build123d import *
 from ocp_vscode import *
 
-outer_dia = 7
+outer_dia = 4
 hole_dia1 = 2
 hole_dia2 = 1.6
 slot_dia = 2

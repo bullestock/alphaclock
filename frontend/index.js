@@ -25,6 +25,10 @@ window.addEventListener('load', () => {
     let secsUpFastBtn = byId('secsUpFast')
     let secsDownFastBtn = byId('secsDownFast')
 
+    let hoursZeroBtn = byId('hoursZero')
+    let minsZeroBtn = byId('minsZero')
+    let secsZeroBtn = byId('secsZero')
+    
     ws.addEventListener('message', e => {
         console.log('WS msg: ' + e)
     })
@@ -83,6 +87,13 @@ window.addEventListener('load', () => {
         ws.send(dview.buffer)
     }
 
+    function handleZeroClick(hand) {
+        let dview = new DataView(new ArrayBuffer(2))
+        dview.setUint8(0, 3)
+        dview.setUint8(1, Number(hand))
+        ws.send(dview.buffer)
+    }
+
     manBtn.addEventListener('pointerdown', () => {
         handleModeClick(0)
     })
@@ -130,5 +141,15 @@ window.addEventListener('load', () => {
             })
         }
     }
+
+    hoursZeroBtn.addEventListener('pointerdown', () => {
+        handleZeroClick(0)
+    })
+    minsZeroBtn.addEventListener('pointerdown', () => {
+        handleZeroClick(1)
+    })
+    secsZeroBtn.addEventListener('pointerdown', () => {
+        handleZeroClick(2)
+    })
 })
 
