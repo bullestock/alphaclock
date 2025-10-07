@@ -126,7 +126,7 @@ static int calibrate(int argc, char** argv)
         for (int i = 0; i < MOTOR_COUNT; ++i)
         {
             const auto& calibration = get_calibration(i);
-            printf("%d  %1d  %5.1f\n", i,
+            printf("%d  %1d  %5.3f\n", i,
                    calibration.reverse,
                    calibration.steps);
         }
