@@ -37,13 +37,27 @@ void Hand::go_to(int position)
 #endif
     if (std::abs(diff_steps) > calibration.steps/2.0)
     {
+        // We are more than 180 degrees from the target - or are we?
+        const auto wrapped_target_steps = target_steps + calibration.steps; // 127.0
+        const int wrapped_diff_steps = wrapped_target_steps - current_position; // 11.0
+        if (std::abs(wrapped_diff_steps) < std::abs(diff_steps))
+        {
+            // It is faster to go the other way around
+            diff_steps = wrapped_diff_steps;
 #if DEBUG_MOTOR
-        printf("Forward: %d steps reverse %d\n", diff_steps, reverse);
+            printf("Wrapped: %d steps reverse %d\n", diff_steps, reverse);
 #endif
-        diff_steps = std::round(calibration.steps - std::abs(diff_steps));
-        reverse = !reverse;
+        }
+        else
+        {
 #if DEBUG_MOTOR
-        printf("Reverse: %d steps reverse %d\n", diff_steps, reverse);
+            printf("Forward: %d steps reverse %d\n", diff_steps, reverse);
+#endif
+            diff_steps = std::round(calibration.steps - std::abs(diff_steps));
+            reverse = !reverse;
+#if DEBUG_MOTOR
+            printf("Reverse: %d steps reverse %d\n", diff_steps, reverse);
+        }
 #endif
     }
     const int steps = (reverse ? -1 : 1) * diff_steps;
