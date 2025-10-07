@@ -57,8 +57,8 @@ void Hand::go_to(int position)
             reverse = !reverse;
 #if DEBUG_MOTOR
             printf("Reverse: %d steps reverse %d\n", diff_steps, reverse);
-        }
 #endif
+        }
     }
     const int steps = (reverse ? -1 : 1) * diff_steps;
 #if DEBUG_MOTOR
