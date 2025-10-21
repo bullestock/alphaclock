@@ -7,7 +7,7 @@ from defs import *
 bearing_od = 27.5
 bearing_id = 23.5
 bearing_th = 4
-b_crush = 0.45
+b_crush = 0.6
 flange_h = 1
 z_offset = 4
 
