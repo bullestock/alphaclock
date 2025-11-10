@@ -4,7 +4,7 @@ from defs import *
 
 h = 2
 r1 = 4/2
-r2 = 2/2
+r2 = 2.1/2
 
 with BuildPart() as p:
     with BuildSketch():
