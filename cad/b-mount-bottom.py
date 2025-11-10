@@ -39,6 +39,11 @@ with BuildPart() as p:
         with Locations((0, gear_dia/2 + worm_dia/2)):
             RectangleRounded(worm_l + worm_cl, worm_dia + worm_cl, 2)
     extrude(amount=2.5*bearing_th, mode=Mode.SUBTRACT)
+    # insert holes
+    with BuildSketch():
+        with Locations((5, ow/2 - 5), (-5, ow/2 - 5)):
+            Circle(insert_r - 0.1)
+    extrude(amount=bearing_th + flange_h, mode=Mode.SUBTRACT)
     
 show(p)
 
