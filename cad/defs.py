@@ -8,3 +8,8 @@ bearing_id = 20
 bearing_th = 4
 bearing_od = 27.25
 b_crush = 0.45
+
+gear_inner_dia = 40
+gear_hole_cc = 30
+gear_hole_dia = 2.2
+gear_mount_th = 2

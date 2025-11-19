@@ -15,11 +15,6 @@ b_crush = 0.45
 h_crush = 0.2
 rr = 0.5
 
-gear_inner_dia = 40
-gear_hole_cc = 30
-gear_hole_dia = 2.2
-gear_mount_th = 2
-
 bearing_clearance = 1
 
 bearing_z = gear_mount_th + bearing_clearance

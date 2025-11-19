@@ -14,7 +14,8 @@ screwhole_y = 4.5
 stud_y = -7.1
 axle_y = -4.
 axle_z = 3
-
+arm_l = 50
+arm_w = 8
 
 bottom = (Align.CENTER, Align.CENTER, Align.MIN)
 
@@ -47,6 +48,10 @@ with BuildPart() as p:
     extrude(amount=-w, mode=Mode.SUBTRACT)
     #e = p.edges().sort_by(SortBy.LENGTH)
     #fillet([e[9], e[14], e[-1]], radius=0.15)
+    #with BuildSketch(p.faces().sort_by(Axis.Z)[0]):
+    #    with Locations((w/2 + arm_l/2 - 5, d/2 - stud_d/2 + 0.125)):
+    #        RectangleRounded(arm_l, arm_w, 1)
+    #extrude(amount=-th)
     
 
 show(p)
