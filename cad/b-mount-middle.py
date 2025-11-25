@@ -14,17 +14,17 @@ hole_radius = 30
 worm_l, worm_dia, worm_cl = 7, 6, 2*2
 gear_dia = 45
 
-b_offset = -10
+b_offset = -7.5
 
 bottom = (Align.CENTER, Align.CENTER, Align.MIN)
 top = (Align.CENTER, Align.CENTER, Align.MAX)
 
 with BuildPart() as p:
     with BuildSketch():
-        RectangleRounded(75, 35, 5)
+        RectangleRounded(80, 35, 5)
     extrude(amount=bearing_th + flange_h)
     # screw holes
-    sd = 32.5
+    sd = 35
     with BuildSketch(p.faces().sort_by(Axis.Z)[-1]) as sk:
         with Locations((-sd, 12.5), (sd, 12.5), (-sd, -12.5), (sd, -12.5)):
             Circle(3.2/2)
@@ -41,7 +41,7 @@ with BuildPart() as p:
     extrude(amount=bearing_th + flange_h, mode=Mode.SUBTRACT)
     # crush ribs
     with BuildSketch(p.faces().sort_by(Axis.Z)[-1]) as sk:
-        with Locations((b_offset - 3.75, 0)): # why?
+        with Locations((b_offset - 2.25, 0)): # why?
             with PolarLocations(radius=bearing_od/2 + b_crush/2, count=10):
                 Circle(b_crush)
     extrude(amount=-bearing_th)
