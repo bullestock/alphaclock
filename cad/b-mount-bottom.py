@@ -18,8 +18,9 @@ gear_dia = 45
 bottom = (Align.CENTER, Align.CENTER, Align.MIN)
 
 with BuildPart() as p:
-    with BuildSketch():
-        RectangleRounded(110, ow + 2, 2)
+    with BuildSketch(Plane.XY):
+        with Locations((0, 7.5)):
+            RectangleRounded(110, ow + 2, 2)
     extrude(amount=bearing_th + flange_h)
 
     # stud holes
@@ -38,10 +39,10 @@ with BuildPart() as p:
     Cylinder(bearing_id/2, bearing_th + flange_h, align=bottom,
              mode=Mode.SUBTRACT)
     # crush ribs
-    with BuildSketch(p.faces().sort_by(Axis.Z)[-1]) as sk:
+    with BuildSketch(Plane.XY) as sk:
         with PolarLocations(radius=bearing_od/2 + b_crush/2, count=10):
             Circle(b_crush)
-    extrude(amount=-bearing_th)
+    extrude(amount=bearing_th)
     # insert holes, middle
     mx = 7.5
     my = 0
@@ -54,6 +55,7 @@ with BuildPart() as p:
     extrude(amount=10, mode=Mode.SUBTRACT)
     # insert holes, top
     mx = 0
+    my = 7.5
     with BuildSketch(Plane.XY) as sk:
         with Locations((mx - sdy, my - sdx), (mx - sdy, my + sdx), 
                        (mx + sdy, my + sdx), (mx + sdy, my - sdx)):
@@ -72,8 +74,8 @@ with BuildPart() as p:
     extrude(amount=bearing_th + flange_h, mode=Mode.SUBTRACT)
     # motor cutout
     with BuildSketch():
-        with Locations((-50, 25)):
-            RectangleRounded(20, 15, 1)
+        with Locations((-50+2.5, 25)):
+            RectangleRounded(25, 15, 1)
     extrude(amount=2.5*bearing_th, mode=Mode.SUBTRACT)
     
 show(p)
