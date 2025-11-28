@@ -23,10 +23,13 @@ with BuildPart() as p:
     extrude(amount=bearing_th + flange_h)
 
     # stud holes
-    # with BuildSketch(p.faces().sort_by(Axis.Z)[-1]) as sk:
-    #     with PolarLocations(radius=screw_radius, count=4, start_angle=45):
-    #         Circle(8.25/2)
-    # extrude(amount=-(bearing_th + flange_h), mode=Mode.SUBTRACT)
+    sxcd = 30
+    sycd = 41
+    with BuildSketch(p.faces().sort_by(Axis.Z)[-1]) as sk:
+        with Locations((sxcd, sycd), (-sxcd, sycd),
+                       (sxcd, -sycd), (-sxcd, -sycd)):
+            Circle(8.25/2)
+    extrude(amount=-(bearing_th + flange_h), mode=Mode.SUBTRACT)
 
     # bearing hole
     Cylinder(bearing_od/2 + b_crush/2, bearing_th, align=bottom,
@@ -39,7 +42,7 @@ with BuildPart() as p:
         with PolarLocations(radius=bearing_od/2 + b_crush/2, count=10):
             Circle(b_crush)
     extrude(amount=-bearing_th)
-    # insert holes
+    # insert holes, middle
     mx = 7.5
     my = 0
     sdx = 35
@@ -47,6 +50,13 @@ with BuildPart() as p:
     with BuildSketch(Plane.XY) as sk:
         with Locations((mx - sdx, my - sdy), (mx - sdx, my + sdy), 
                        (mx + sdx, my + sdy), (mx + sdx, my - sdy)):
+            Circle(4.2/2)
+    extrude(amount=10, mode=Mode.SUBTRACT)
+    # insert holes, top
+    mx = 0
+    with BuildSketch(Plane.XY) as sk:
+        with Locations((mx - sdy, my - sdx), (mx - sdy, my + sdx), 
+                       (mx + sdy, my + sdx), (mx + sdy, my - sdx)):
             Circle(4.2/2)
     extrude(amount=10, mode=Mode.SUBTRACT)
 
