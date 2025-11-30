@@ -2,11 +2,11 @@ from build123d import *
 from ocp_vscode import *
 from defs import *
 
-h = 15
+h = 10
 r1 = 2/2
 r2 = 1.5/2
-r3 = 3
-slit_w = 1.5
+r3 = 2.25
+slit_w = 1.25
 slit_h = 7.5
 
 with BuildPart() as p:

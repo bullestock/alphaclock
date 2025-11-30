@@ -6,7 +6,7 @@ from defs import *
 
 bearing_id = 20
 bearing_th = 4
-stem_h = 14.5
+stem_h = 16.5
 o_dia1 = 5.9
 o_dia2 = 7
 mount_h = 1.5
@@ -28,13 +28,13 @@ with BuildPart() as p:
         with PolarLocations(radius=gear_hole_cc/2, count=4):
             CounterSinkHole(gear_hole_dia/2, gear_hole_dia)
     # spacer
-    with Locations([(0, 0, bearing_z/2)]):
+    with Locations([(0, 0, gear_mount_th/2)]):
         Cylinder(bearing_id/2 + 1.5, bearing_clearance)
     # part that fits inside bearing
     with Locations([(0, 0, bearing_z)]):
         Cylinder(bearing_id/2 - b_crush/2, bearing_th)
     # bearing crush ribs
-    with BuildSketch(p.faces().sort_by(Axis.Z)[0].offset(-gear_mount_th - rr)) as sk:
+    with BuildSketch(p.faces().sort_by(Axis.Z)[0].offset(-gear_mount_th - bearing_clearance/2)) as sk:
         with PolarLocations(radius=bearing_id/2 - b_crush/2 - 0.1, count=10):
             Circle(b_crush)
     extrude(amount=-(bearing_th - 2*rr))

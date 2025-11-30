@@ -37,7 +37,7 @@ with BuildPart() as o:
         with Locations([(-hole_cc/2, z_offset, 0), (hole_cc/2, z_offset, 0)]):
             RectangleRounded(3.4, 7, 1.65)
     extrude(amount=-6, mode=Mode.SUBTRACT)
-    
 
-show(o)    
+
+show(o)
 export_step(o.part, f"stepperholder-moveable-{z_offset}.step")

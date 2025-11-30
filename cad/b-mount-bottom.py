@@ -9,6 +9,8 @@ bearing_id = 23.5
 bearing_th = 4
 b_crush = 0.6     # crush ribs radius
 flange_h = 1      # bearing retaining flange height
+extra_h = 2 # to clear motor
+total_h = bearing_th + flange_h + extra_h
 
 # worm gear dimensions
 worm_l, worm_dia, worm_cl = 7, 6, 2*2
@@ -21,7 +23,7 @@ with BuildPart() as p:
     with BuildSketch(Plane.XY):
         with Locations((0, 7.5)):
             RectangleRounded(110, ow + 2, 2)
-    extrude(amount=bearing_th + flange_h)
+    extrude(amount=total_h)
 
     # stud holes
     sxcd = 30
@@ -30,13 +32,13 @@ with BuildPart() as p:
         with Locations((sxcd, sycd), (-sxcd, sycd),
                        (sxcd, -sycd), (-sxcd, -sycd)):
             Circle(8.25/2)
-    extrude(amount=-(bearing_th + flange_h), mode=Mode.SUBTRACT)
+    extrude(amount=-(total_h), mode=Mode.SUBTRACT)
 
     # bearing hole
     Cylinder(bearing_od/2 + b_crush/2, bearing_th, align=bottom,
              mode=Mode.SUBTRACT)
     # through hole
-    Cylinder(bearing_id/2, bearing_th + flange_h, align=bottom,
+    Cylinder(bearing_id/2, total_h, align=bottom,
              mode=Mode.SUBTRACT)
     # crush ribs
     with BuildSketch(Plane.XY) as sk:
@@ -51,7 +53,7 @@ with BuildPart() as p:
     with BuildSketch(Plane.XY) as sk:
         with Locations((mx - sdx, my - sdy), (mx - sdx, my + sdy), 
                        (mx + sdx, my + sdy), (mx + sdx, my - sdy)):
-            Circle(4.2/2)
+            Circle(insert_r)
     extrude(amount=10, mode=Mode.SUBTRACT)
     # insert holes, top
     mx = 0
@@ -59,7 +61,7 @@ with BuildPart() as p:
     with BuildSketch(Plane.XY) as sk:
         with Locations((mx - sdy, my - sdx), (mx - sdy, my + sdx), 
                        (mx + sdy, my + sdx), (mx + sdy, my - sdx)):
-            Circle(4.2/2)
+            Circle(insert_r)
     extrude(amount=10, mode=Mode.SUBTRACT)
 
     # worm gear cutout
@@ -71,13 +73,32 @@ with BuildPart() as p:
     with BuildSketch():
         with Locations((5, ow/2 - 5), (-5, ow/2 - 5)):
             Circle(insert_r - 0.1)
-    extrude(amount=bearing_th + flange_h, mode=Mode.SUBTRACT)
-    # motor cutout
+    extrude(amount=10, mode=Mode.SUBTRACT)
+
+cutout_x = -50+2.5
+
+with BuildPart() as cutout:
+    # motor body
     with BuildSketch():
-        with Locations((-50+2.5, 25)):
+        with Locations((cutout_x, 25)):
+            RectangleRounded(25, 15 + 2*total_h, 1)
+    with BuildSketch(Plane.XY.offset(total_h)):
+        with Locations((cutout_x, 25)):
             RectangleRounded(25, 15, 1)
-    extrude(amount=2.5*bearing_th, mode=Mode.SUBTRACT)
-    
+    loft()
+    # motor bracket
+    with BuildSketch():
+        with Locations((cutout_x+11., 25)):
+            RectangleRounded(2, 25, .5)
+    extrude(amount=total_h)
+    # groove for coupler
+    with BuildSketch(Plane.YZ.offset(-35)):
+        with Locations((25, 0)):
+            Circle(3)
+    extrude(amount=20)
+
+p.part -= cutout.part
+
 show(p)
 
 export_step(p.part, 'mount-bottom.step')

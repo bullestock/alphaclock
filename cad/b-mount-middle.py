@@ -53,7 +53,7 @@ with BuildPart() as p:
     # insert holes
     with BuildSketch():
         with Locations((ow/2 - 5 + b_offset, 5), (ow/2 - 5 + b_offset, -5)):
-            Circle(insert_r - 0.1)
+            Circle(insert_r)
     extrude(amount=bearing_th + flange_h, mode=Mode.SUBTRACT)
     
 show(p)
