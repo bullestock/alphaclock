@@ -24,16 +24,12 @@ with BuildPart() as p:
     with BuildSketch(Plane.XY):
         RectangleRounded(x_size, 35, 5)
     extrude(amount=bearing_th + flange_h)
-    with BuildSketch(Plane.XY):
-        with Locations((b_offset, b_offset)):
-            RectangleRounded(40, 50, 5)
-    extrude(amount=bearing_th + flange_h)
-    # screw holes
     sd = 35
     with BuildSketch(Plane.XY) as sk:
-        with Locations((-sd, 12.5), (sd, 12.5), (-sd, -12.5), (sd, -12.5)):
+        # screw holes
+        with Locations((sd, 12.5), (sd, -12.5)):
             Circle(3.2/2)
-        with Locations((b_offset - 12.5, -x_size/4 + b_offset), (b_offset + 12.5, -x_size/4 + b_offset)):
+        with Locations((sd, 0)):
             RectangleRounded(6, 3.2, 1.5)
     extrude(amount=(bearing_th + flange_h), mode=Mode.SUBTRACT)
     # bearing hole

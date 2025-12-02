@@ -18,6 +18,7 @@ hole_y = -dy1/2
 motor_y = -dy1/2 - hole_cc/2 -11.5
 motor_z = 16.75
 mot_d = 19.7
+spacer_h = 8
 
 with BuildPart() as p:
     # basic shape
@@ -27,11 +28,16 @@ with BuildPart() as p:
         with Locations((dx2/2 + 17.5, -dy2/2)):
             RectangleRounded(dx2, dy2, 2)
     extrude(amount=th)
-    # screw holes
+    # spacers
     with BuildSketch(Plane.XY):
         with Locations([(hole_x, hole_y - hole_cc/2), (hole_x, hole_y + hole_cc/2)]):
-            RectangleRounded(3.4, 7, 1.65)
-    extrude(amount=th, mode=Mode.SUBTRACT)
+            RectangleRounded(8, 12, 3)
+    extrude(amount=spacer_h)
+    # insert holes
+    with BuildSketch(Plane.XY):
+        with Locations([(hole_x, hole_y - hole_cc/2), (hole_x, hole_y + hole_cc/2)]):
+            Circle(radius=insert_r)
+    extrude(amount=spacer_h, mode=Mode.SUBTRACT)
     # motor mount
     with BuildSketch(Plane.XY):
         with Locations((dx1 - mmdx/2, motor_y)):
