@@ -32,6 +32,7 @@ extern bool is_button_fast;
 extern Mode active_mode;
 extern HourMode active_hour_mode;
 extern bool set_zero[MOTOR_COUNT];
+extern bool goto_zero[MOTOR_COUNT];
 
 extern "C"
 void app_main(void)
@@ -71,7 +72,13 @@ void app_main(void)
             initialize_sntp();
         }
     }
-    
+
+    for (int i = 0; i < MOTOR_COUNT; ++i)
+    {
+        set_zero[i] = false;
+        goto_zero[i] = false;
+    }
+        
     printf("\n\nPress a key to enter console\n");
     bool debug = false;
     for (int i = 0; i < 20; ++i)
@@ -103,12 +110,13 @@ void app_main(void)
     while (1)
     {
         vTaskDelay(1);
+        handle_zero();
         switch (active_mode)
         {
         case MODE_MANUAL:
             if (is_button_pressed)
             {
-                int delay = is_button_fast ? 2000 : 15000;
+                int delay = is_button_fast ? 1000 : 10000;
                 if (!was_button_pressed)
                     was_button_pressed = true;
                 ESP_LOGI(TAG, "Active: %d", active_button);
@@ -128,12 +136,10 @@ void app_main(void)
             break;
 
         case MODE_NORMAL:
-            handle_zero();
             handle_normal_mode();
             break;
             
         case MODE_FAST:
-            handle_zero();
             handle_fast_mode();
             break;
         }
@@ -156,12 +162,20 @@ Hand& get_hand(int hand)
 void handle_zero()
 {
     for (int i = 0; i < MOTOR_COUNT; ++i)
+    {
         if (set_zero[i])
         {
             printf("Reset hand %d\n", i);
             set_zero[i] = false;
             get_hand(i).zero();
         }
+        if (goto_zero[i])
+        {
+            printf("Move hand %d to 0\n", i);
+            goto_zero[i] = false;
+            get_hand(i).go_to(0);
+        }
+    }
 }
 
 void handle_normal_mode()

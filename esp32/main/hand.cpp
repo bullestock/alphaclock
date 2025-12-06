@@ -28,7 +28,7 @@ void Hand::go_to(int position)
            motor.get_index(), calibration.steps,
            current_position, target_steps, position);
 #endif
-    const int delay = 5000;
+    const int delay = 1000;
 
     int diff_steps = target_steps - current_position;
     bool reverse = calibration.reverse;
@@ -38,8 +38,8 @@ void Hand::go_to(int position)
     if (std::abs(diff_steps) > calibration.steps/2.0)
     {
         // We are more than 180 degrees from the target - or are we?
-        const auto wrapped_target_steps = target_steps + calibration.steps; // 127.0
-        const int wrapped_diff_steps = wrapped_target_steps - current_position; // 11.0
+        const auto wrapped_target_steps = target_steps + calibration.steps;
+        const int wrapped_diff_steps = wrapped_target_steps - current_position;
         if (std::abs(wrapped_diff_steps) < std::abs(diff_steps))
         {
             // It is faster to go the other way around
