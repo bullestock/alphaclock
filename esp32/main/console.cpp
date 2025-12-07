@@ -61,7 +61,7 @@ static int test_motor(int argc, char** argv)
     }
     const auto delay = motor_args.delay->ival[0];
     const auto steps = motor_args.steps->ival[0];
-    int repeats = 0;
+    int repeats = 1;
     if (motor_args.repeats->count > 0)
         repeats = motor_args.repeats->ival[0];
 
@@ -157,6 +157,25 @@ static int calibrate(int argc, char** argv)
 
     printf("Done\n");
 
+    return 0;
+}
+
+struct
+{
+    struct arg_int* on;
+    struct arg_end* end;
+} motor_delay_args;
+
+int motor_delay(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &motor_delay_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, motor_delay_args.end, argv[0]);
+        return 1;
+    }
+    set_motor_delay(motor_delay_args.on->ival[0]);
+    printf("Motor delay set to %d\n", get_motor_delay());
     return 0;
 }
 
@@ -341,6 +360,19 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&zero_cmd));
+
+    motor_delay_args.on = arg_int1(NULL, NULL, "<delay>", "Delay in microseconds");
+    motor_delay_args.end = arg_end(2);
+    const esp_console_cmd_t motor_delay_cmd = {
+        .command = "motor_delay",
+        .help = "Set motor delay",
+        .hint = nullptr,
+        .func = &motor_delay,
+        .argtable = &motor_delay_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&motor_delay_cmd));
 
     motor_debug_args.on = arg_int1(NULL, NULL, "<on>", "On (0-1)");
     motor_debug_args.end = arg_end(2);

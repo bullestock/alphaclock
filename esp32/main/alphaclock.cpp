@@ -118,7 +118,9 @@ void app_main(void)
         case MODE_MANUAL:
             if (is_button_pressed)
             {
-                int delay = is_button_fast ? 1000 : 10000;
+                int delay = get_motor_delay();
+                if (!is_button_fast)
+                    delay *= 10;
                 if (!was_button_pressed)
                     was_button_pressed = true;
                 ESP_LOGI(TAG, "Active: %d", active_button);

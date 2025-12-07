@@ -14,6 +14,8 @@ static calibration_data calibration[MOTOR_COUNT];
 
 static bool motor_debug;
 
+static int motor_delay;
+
 void clear_wifi_credentials()
 {
     nvs_handle my_handle;
@@ -97,6 +99,22 @@ wifi_creds_t get_wifi_creds()
     return wifi_creds;
 }
 
+void set_motor_delay(int delay)
+{
+    motor_delay = delay;
+    nvs_handle my_handle;
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &my_handle));
+    ESP_ERROR_CHECK(nvs_set_u16(my_handle, MOTOR_DELAY_KEY,
+                                motor_delay));
+    ESP_ERROR_CHECK(nvs_commit(my_handle));
+    nvs_close(my_handle);
+}
+
+int get_motor_delay()
+{
+    return motor_delay;
+}
+
 void set_motor_debug(bool on)
 {
     motor_debug = on;
@@ -139,9 +157,14 @@ void init_nvs()
             calibration[i].steps = 100;
         }
     }
-    uint8_t tmp = 0;
-    if (nvs_get_u8(my_handle, MOTOR_DEBUG_KEY, &tmp) == ESP_OK)
-        motor_debug = tmp;
+    uint16_t tmp1 = 0;
+    if (nvs_get_u16(my_handle, MOTOR_DELAY_KEY, &tmp1) == ESP_OK)
+        motor_delay = tmp1;
+    else
+        motor_delay = 1000;
+    uint8_t tmp2 = 0;
+    if (nvs_get_u8(my_handle, MOTOR_DEBUG_KEY, &tmp2) == ESP_OK)
+        motor_debug = tmp2;
     else
         motor_debug = false;
     nvs_close(my_handle);

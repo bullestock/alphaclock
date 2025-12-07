@@ -34,7 +34,6 @@ void Hand::go_to(int position)
                motor.get_index(), calibration.steps,
                current_position, target_steps, position);
     }
-    const int delay = 1000;
 
     int diff_steps = target_steps - current_position;
     bool reverse = calibration.reverse;
@@ -67,7 +66,7 @@ void Hand::go_to(int position)
         printf("%d steps\n", steps);
     if (std::abs(steps) > 0)
     {
-        motor.step(steps, delay, true);
+        motor.step(steps, get_motor_delay(), true);
 
         current_position = target_steps;
     }
