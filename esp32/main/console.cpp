@@ -145,6 +145,43 @@ static int hands(int argc, char** argv)
 
 struct
 {
+    struct arg_int* hour;
+    struct arg_end* end;
+} transition_args;
+
+static int transition(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &transition_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, transition_args.end, argv[0]);
+        return 1;
+    }
+
+    int hour = transition_args.hour->ival[0];
+    int min = 59;
+    for (int sec_offset = 0; sec_offset < 5; ++sec_offset)
+    {
+        int sec = 59 + sec_offset;
+        if (sec >= 60)
+        {
+            if (sec == 60)
+            {
+                ++hour;
+                min = 0;
+            }
+            sec -= 60;
+        }
+        set_hands(hour, min, sec);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    printf("Done\n");
+
+    return 0;
+}
+
+struct
+{
     struct arg_int* motor;
     struct arg_int* reverse;
     struct arg_dbl* steps;
@@ -376,6 +413,19 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&hands_cmd));
+
+    transition_args.hour = arg_int1(NULL, NULL, "<hour>", "Start hour (0-11)");
+    transition_args.end = arg_end(2);
+    const esp_console_cmd_t transition_cmd = {
+        .command = "transition",
+        .help = "Perform transition from one position to another",
+        .hint = nullptr,
+        .func = &transition,
+        .argtable = &transition_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&transition_cmd));
 
     calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     calibrate_args.reverse = arg_int1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
