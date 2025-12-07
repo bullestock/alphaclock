@@ -196,9 +196,9 @@ void handle_normal_mode()
     int fraction = 0;
     if (active_hour_mode == HOUR_MODE_CONTINUOUS)
         fraction = tm.tm_min;
-    h_hours.go_to_hour(tm.tm_hour, fraction);
-    h_minutes.go_to(tm.tm_min);
     h_seconds.go_to(tm.tm_sec);
+    h_minutes.go_to(tm.tm_min);
+    h_hours.go_to_hour(tm.tm_hour, fraction);
 }
 
 void handle_fast_mode()
