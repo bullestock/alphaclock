@@ -9,6 +9,8 @@ class Hand
 public:
     Hand(Stepper& m);
 
+    static void set_debug(bool on);
+
     void zero();
     
     // Move to position 0-59

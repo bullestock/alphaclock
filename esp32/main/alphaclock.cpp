@@ -98,6 +98,8 @@ void app_main(void)
     esp_log_level_set("esp_wifi", ESP_LOG_ERROR);
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
+    Hand::set_debug(get_motor_debug());
+    
     start_webserver();
 
     extern bool is_button_pressed;

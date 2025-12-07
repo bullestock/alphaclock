@@ -41,6 +41,7 @@ struct
     struct arg_int* motor;
     struct arg_int* delay;
     struct arg_int* steps;
+    struct arg_int* repeats;
     struct arg_end* end;
 } motor_args;
 
@@ -60,14 +61,19 @@ static int test_motor(int argc, char** argv)
     }
     const auto delay = motor_args.delay->ival[0];
     const auto steps = motor_args.steps->ival[0];
+    int repeats = 0;
+    if (motor_args.repeats->count > 0)
+        repeats = motor_args.repeats->ival[0];
 
     Stepper* motors[] = { &s_hours, &s_minutes, &s_seconds };
-    
-    printf("Stepping motor %d at %d us: %d\n",
-           motor, delay, steps);
 
-    motors[motor]->step(steps, delay, true);
+    for (int i = 0; i < repeats; ++i)
+    {
+        printf("Stepping motor %d at %d us: %d\n",
+               motor, delay, steps);
 
+        motors[motor]->step(steps, delay, true);
+    }
     printf("Done\n");
 
     return 0;
@@ -151,6 +157,25 @@ static int calibrate(int argc, char** argv)
 
     printf("Done\n");
 
+    return 0;
+}
+
+struct
+{
+    struct arg_int* on;
+    struct arg_end* end;
+} motor_debug_args;
+
+int motor_debug(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &motor_debug_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, motor_debug_args.end, argv[0]);
+        return 1;
+    }
+    set_motor_debug(motor_debug_args.on->ival[0]);
+    printf("Motor debug set to %d\n", get_motor_debug());
     return 0;
 }
 
@@ -264,6 +289,7 @@ void run_console()
     motor_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     motor_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
     motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");
+    motor_args.repeats = arg_int0(NULL, NULL, "<repeats>", "Number of steps");
     motor_args.end = arg_end(2);
     const esp_console_cmd_t test_motor_cmd = {
         .command = "motor",
@@ -315,6 +341,19 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&zero_cmd));
+
+    motor_debug_args.on = arg_int1(NULL, NULL, "<on>", "On (0-1)");
+    motor_debug_args.end = arg_end(2);
+    const esp_console_cmd_t motor_debug_cmd = {
+        .command = "motor_debug",
+        .help = "Turn motor debug on or off",
+        .hint = nullptr,
+        .func = &motor_debug,
+        .argtable = &motor_debug_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&motor_debug_cmd));
 
     add_wifi_credentials_args.ssid = arg_str1(NULL, NULL, "<ssid>", "SSID");
     add_wifi_credentials_args.password = arg_strn(NULL, NULL, "<password>", 0, 1, "Password");

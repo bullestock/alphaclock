@@ -5,11 +5,16 @@
 
 #include "esp_system.h"
 
-#define DEBUG_MOTOR 0
+static bool debug_motor = false;
 
 Hand::Hand(Stepper& m)
     : motor(m)
 {
+}
+
+void Hand::set_debug(bool on)
+{
+    debug_motor = on;
 }
 
 void Hand::zero()
@@ -23,18 +28,18 @@ void Hand::go_to(int position)
     const auto& calibration = motor.get_calibration();
     const int target_steps = std::round(calibration.steps * position / 60.0);
 
-#if DEBUG_MOTOR
-    printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
-           motor.get_index(), calibration.steps,
-           current_position, target_steps, position);
-#endif
+    if (debug_motor)
+    {
+        printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
+               motor.get_index(), calibration.steps,
+               current_position, target_steps, position);
+    }
     const int delay = 1000;
 
     int diff_steps = target_steps - current_position;
     bool reverse = calibration.reverse;
-#if DEBUG_MOTOR
-    printf("diff %d reverse %d\n", diff_steps, reverse);
-#endif
+    if (debug_motor)
+        printf("diff %d reverse %d\n", diff_steps, reverse);
     if (std::abs(diff_steps) > calibration.steps/2.0)
     {
         // We are more than 180 degrees from the target - or are we?
@@ -44,26 +49,22 @@ void Hand::go_to(int position)
         {
             // It is faster to go the other way around
             diff_steps = wrapped_diff_steps;
-#if DEBUG_MOTOR
-            printf("Wrapped: %d steps reverse %d\n", diff_steps, reverse);
-#endif
+            if (debug_motor)
+                printf("Wrapped: %d steps reverse %d\n", diff_steps, reverse);
         }
         else
         {
-#if DEBUG_MOTOR
-            printf("Forward: %d steps reverse %d\n", diff_steps, reverse);
-#endif
+            if (debug_motor)
+                printf("Forward: %d steps reverse %d\n", diff_steps, reverse);
             diff_steps = std::round(calibration.steps - std::abs(diff_steps));
             reverse = !reverse;
-#if DEBUG_MOTOR
-            printf("Reverse: %d steps reverse %d\n", diff_steps, reverse);
-#endif
+            if (debug_motor)
+                printf("Reverse: %d steps reverse %d\n", diff_steps, reverse);
         }
     }
     const int steps = (reverse ? -1 : 1) * diff_steps;
-#if DEBUG_MOTOR
-    printf("%d steps\n", steps);
-#endif
+    if (debug_motor)
+        printf("%d steps\n", steps);
     if (std::abs(steps) > 0)
     {
         motor.step(steps, delay, true);

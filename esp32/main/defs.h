@@ -10,6 +10,7 @@ constexpr const char* VERSION = "0.0.1";
 // NVS keys
 constexpr const char* WIFI_KEY = "wifi";
 constexpr const char* CALIBRATION_KEY = "cal";
+constexpr const char* MOTOR_DEBUG_KEY = "mdb";
 
 // Pin definitions
 constexpr const auto PIN_A1 = (gpio_num_t) 25;

@@ -12,6 +12,8 @@ static wifi_creds_t wifi_creds;
 
 static calibration_data calibration[MOTOR_COUNT];
 
+static bool motor_debug;
+
 void clear_wifi_credentials()
 {
     nvs_handle my_handle;
@@ -95,6 +97,22 @@ wifi_creds_t get_wifi_creds()
     return wifi_creds;
 }
 
+void set_motor_debug(bool on)
+{
+    motor_debug = on;
+    nvs_handle my_handle;
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &my_handle));
+    ESP_ERROR_CHECK(nvs_set_u8(my_handle, MOTOR_DEBUG_KEY,
+                               static_cast<uint8_t>(motor_debug)));
+    ESP_ERROR_CHECK(nvs_commit(my_handle));
+    nvs_close(my_handle);
+}
+
+bool get_motor_debug()
+{
+    return motor_debug;
+}
+
 void init_nvs()
 {
     esp_err_t ret = nvs_flash_init();
@@ -121,6 +139,11 @@ void init_nvs()
             calibration[i].steps = 100;
         }
     }
+    uint8_t tmp = 0;
+    if (nvs_get_u8(my_handle, MOTOR_DEBUG_KEY, &tmp) == ESP_OK)
+        motor_debug = tmp;
+    else
+        motor_debug = false;
     nvs_close(my_handle);
 }
 

@@ -20,6 +20,10 @@ void set_calibration(int motor, int reverse, double steps);
 
 const calibration_data& get_calibration(int motor);
 
+void set_motor_debug(bool on);
+
+bool get_motor_debug();
+
 // Local Variables:
 // compile-command: "cd .. && idf.py build"
 // End:
