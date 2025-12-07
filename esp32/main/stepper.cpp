@@ -25,6 +25,11 @@ static int enable_pin[MOTOR_COUNT];
 static int count = 0;
 static bool timer_enabled = false;
 
+Stepper s_hours(PIN_EN1);
+Stepper s_minutes(PIN_EN2);
+Stepper s_seconds(PIN_EN3);
+
+
 int calc_pwm(int phase, int offset)
 {
     return int(cos(((phase + 0) +

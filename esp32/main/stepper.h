@@ -23,3 +23,5 @@ public:
 private:
     int motor = 0;
 };
+
+extern Stepper s_hours, s_minutes, s_seconds;

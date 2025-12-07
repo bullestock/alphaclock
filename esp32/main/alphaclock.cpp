@@ -21,16 +21,10 @@ void handle_normal_mode();
 void handle_fast_mode();
 void handle_zero();
 
-Stepper s_hours(PIN_EN1), s_minutes(PIN_EN2), s_seconds(PIN_EN3);
-Hand h_hours(s_hours);
-Hand h_minutes(s_minutes);
-Hand h_seconds(s_seconds);
-
 extern int active_button;
 extern bool button_direction_up;
 extern bool is_button_fast;
 extern Mode active_mode;
-extern HourMode active_hour_mode;
 extern bool set_zero[MOTOR_COUNT];
 extern bool goto_zero[MOTOR_COUNT];
 
@@ -197,12 +191,7 @@ void handle_normal_mode()
 
     printf("Normal: %02d:%02d:%02d\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-    int fraction = 0;
-    if (active_hour_mode == HOUR_MODE_CONTINUOUS)
-        fraction = tm.tm_min;
-    h_seconds.go_to(tm.tm_sec);
-    h_minutes.go_to(tm.tm_min);
-    h_hours.go_to_hour(tm.tm_hour, fraction);
+    set_hands(tm.tm_hour, tm.tm_min, tm.tm_sec);
 }
 
 void handle_fast_mode()

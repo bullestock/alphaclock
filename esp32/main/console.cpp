@@ -118,6 +118,33 @@ static int hand(int argc, char** argv)
 
 struct
 {
+    struct arg_int* hour;
+    struct arg_int* min;
+    struct arg_int* sec;
+    struct arg_end* end;
+} hands_args;
+
+static int hands(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &hands_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, hands_args.end, argv[0]);
+        return 1;
+    }
+    const auto hour = hands_args.hour->ival[0];
+    const auto min = hands_args.min->ival[0];
+    const auto sec = hands_args.sec->ival[0];
+
+    set_hands(hour, min, sec);
+
+    printf("Done\n");
+
+    return 0;
+}
+
+struct
+{
     struct arg_int* motor;
     struct arg_int* reverse;
     struct arg_dbl* steps;
@@ -334,6 +361,21 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&hand_cmd));
+
+    hands_args.hour = arg_int1(NULL, NULL, "<hour>", "Hours (0-11)");
+    hands_args.min = arg_int1(NULL, NULL, "<min>", "Minutes (0-59)");
+    hands_args.sec = arg_int1(NULL, NULL, "<sec>", "Seconds (0-59)");
+    hands_args.end = arg_end(2);
+    const esp_console_cmd_t hands_cmd = {
+        .command = "hands",
+        .help = "Set all hands to a position",
+        .hint = nullptr,
+        .func = &hands,
+        .argtable = &hands_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&hands_cmd));
 
     calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     calibrate_args.reverse = arg_int1(NULL, NULL, "<reverse>", "Reverse (0, 1)");

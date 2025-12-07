@@ -27,6 +27,12 @@ private:
     int current_position = 0;
 };
 
+extern void set_hands(int hour, int min, int sec);
+
+extern Hand h_hours;
+extern Hand h_minutes;
+extern Hand h_seconds;
+
 // Local Variables:
 // compile-command: "(cd ..; idf.py build)"
 // End:

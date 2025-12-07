@@ -1,11 +1,16 @@
 #include "hand.h"
 #include "stepper.h"
+#include "websocket.h"
 
 #include <cmath>
 
 #include "esp_system.h"
 
 static bool debug_motor = false;
+
+Hand h_hours(s_hours);
+Hand h_minutes(s_minutes);
+Hand h_seconds(s_seconds);
 
 Hand::Hand(Stepper& m)
     : motor(m)
@@ -99,6 +104,25 @@ void Hand::go_to_hour(int hour, int fraction)
     }
     int position = hour_map[hour] * 60/12 + fraction/12;
     go_to(position);
+}
+
+void set_hands(int hour, int min, int sec)
+{
+    static int last_hour = -1;
+
+    if (last_hour >= 0)
+        if (hour != last_hour)
+        {
+        }
+
+    int fraction = 0;
+    if (active_hour_mode == HOUR_MODE_CONTINUOUS)
+        fraction = min;
+    h_seconds.go_to(sec);
+    h_minutes.go_to(min);
+    h_hours.go_to_hour(hour, fraction);
+
+    last_hour = hour;
 }
 
 // Local Variables:
