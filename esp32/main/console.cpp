@@ -232,6 +232,11 @@ struct
 
 int motor_delay(int argc, char** argv)
 {
+    if (argc <= 1)
+    {
+        printf("Motor delay %d\n", get_motor_delay());
+        return 0;
+    }
     int nerrors = arg_parse(argc, argv, (void**) &motor_delay_args);
     if (nerrors != 0)
     {
@@ -456,7 +461,7 @@ void run_console()
     motor_delay_args.on = arg_int1(NULL, NULL, "<delay>", "Delay in microseconds");
     motor_delay_args.end = arg_end(2);
     const esp_console_cmd_t motor_delay_cmd = {
-        .command = "motor_delay",
+        .command = "mdelay",
         .help = "Set motor delay",
         .hint = nullptr,
         .func = &motor_delay,
@@ -469,7 +474,7 @@ void run_console()
     motor_debug_args.on = arg_int1(NULL, NULL, "<on>", "On (0-1)");
     motor_debug_args.end = arg_end(2);
     const esp_console_cmd_t motor_debug_cmd = {
-        .command = "motor_debug",
+        .command = "mdebug",
         .help = "Turn motor debug on or off",
         .hint = nullptr,
         .func = &motor_debug,
