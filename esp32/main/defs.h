@@ -14,13 +14,9 @@ constexpr const char* MOTOR_DEBUG_KEY = "mdb";
 constexpr const char* MOTOR_DELAY_KEY = "mde";
 
 // Pin definitions
-constexpr const auto PIN_A1 = (gpio_num_t) 25;
-constexpr const auto PIN_A2 = (gpio_num_t) 13;
-constexpr const auto PIN_B1 = (gpio_num_t) 5;
-constexpr const auto PIN_B2 = (gpio_num_t) 22;
-constexpr const auto PIN_EN1 = (gpio_num_t) 27;
-constexpr const auto PIN_EN2 = (gpio_num_t) 32;
-constexpr const auto PIN_EN3 = (gpio_num_t) 12;
+constexpr const auto PIN_I2S_DATA = (gpio_num_t) 21;
+constexpr const auto PIN_I2S_BCK  = (gpio_num_t) 16;
+constexpr const auto PIN_I2S_WS   = (gpio_num_t) 17;
 
 constexpr const char* TAG = "ACLK";
 

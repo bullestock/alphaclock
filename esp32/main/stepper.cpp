@@ -11,155 +11,110 @@
 #include <esp_timer.h>
 #include <rom/gpio.h>
 
-const int MAX_PWM = 1024; // must match timer resolution
-
-const bool USE_MICRO_STEPPING = true;
-// Must be a multiple of 4
-const int NOF_MICRO_STEPS = USE_MICRO_STEPPING ? 16 : 4;
-
+/// True if this motor is active; if not, all other variables are ignored
 static bool step_enable[MOTOR_COUNT];
+/// True if this motor goes forward
 static bool step_forward[MOTOR_COUNT];
+/// How many steps are left
 static int steps_left[MOTOR_COUNT];
-static int current_phase[MOTOR_COUNT];
-static int enable_pin[MOTOR_COUNT];
+/// Delay in ticks for each motor
+static int delay[MOTOR_COUNT];
+/// Remaining ticks for each motor
+static int remaining_ticks[MOTOR_COUNT];
+/// Is the STEP pin active?
+static bool step_pin_active[MOTOR_COUNT];
+/// I2S bits
+static int step_bit[MOTOR_COUNT];
+static int dir_bit[MOTOR_COUNT];
+/// Instance count
 static int count = 0;
-static bool timer_enabled = false;
 
-Stepper s_hours(PIN_EN1);
-Stepper s_minutes(PIN_EN2);
-Stepper s_seconds(PIN_EN3);
+Stepper s_hours(2, 1); // X
+Stepper s_minutes(6, 5); // Y
+Stepper s_seconds(4, 3); // Z
 
 
-int calc_pwm(int phase, int offset)
+void IRAM_ATTR i2s_shiftout(uint8_t data)
 {
-    return int(cos(((phase + 0) +
-                    (offset/4.0 * NOF_MICRO_STEPS))/
-                   NOF_MICRO_STEPS * 2.0 * std::numbers::pi) * static_cast<float>(MAX_PWM));
+    // WS = 0
+    REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << 12);
+    int mask = 1;
+    for (int i = 0; i < 8; ++i)
+    {
+        // Write a data bit to DATA
+        if (mask & data)
+            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << 14);
+        else
+            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << 14);
+        // BCK = 1
+        REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << 11);
+        // BCK = 0
+        REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << 11);
+        mask <<= 1;
+    }
+    // WS = 1: Latch
+    REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << 12);
 }
 
-// Note that this function only works if A/B pins are below GPIO32
-static void step(int phase)
+static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
+                                         const gptimer_alarm_event_data_t*,
+                                         void*)
 {
-    if (USE_MICRO_STEPPING)
-    {
-        // each coil has sinusoidal pattern offset 90 degrees from previous coil
-        int coil1a_pwm = calc_pwm(phase, 0);
-        int coil1b_pwm = calc_pwm(phase, 2);
-        int coil2a_pwm = calc_pwm(phase, 3);
-        int coil2b_pwm = calc_pwm(phase, 1);
-    
-        // half rectify each wave
-        if (coil1a_pwm < 0)
-            coil1a_pwm = 0;
-        if (coil1b_pwm < 0)
-            coil1b_pwm = 0;
-        if (coil2a_pwm < 0)
-            coil2a_pwm = 0;
-        if (coil2b_pwm < 0)
-            coil2b_pwm = 0;
-
-        //printf("%3d %3d %3d %3d\n", coil1a_pwm, coil1b_pwm, coil2a_pwm, coil2b_pwm);
-        
-        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, coil1a_pwm));
-        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
-        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, coil1b_pwm));
-        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1));
-        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, coil2a_pwm));
-        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2));
-        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3, coil2b_pwm));
-        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3));
-    }
-    else
-    {
-        switch (phase) {
-        case 0:  // 1010
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A1);
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A2);
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_B1);
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B2);
-            break;
-        case 1:  // 0110
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A1);
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A2);
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_B1);
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B2);
-            break;
-        case 2:  //0101
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A1);
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A2);
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B1);
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_B2);
-            break;
-        case 3:  //1001
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_A1);
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_A2);
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << PIN_B1);
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << PIN_B2);
-            break;
-        }
-    }
-}
-
-static bool timer_isr_callback(gptimer_handle_t,
-                               const gptimer_alarm_event_data_t*,
-                               void*)
-{
+    static uint8_t last_i2s_data = 0;
+    uint8_t i2s_data = 0;
+    bool enabled = false;
     for (int motor = 0; motor < MOTOR_COUNT; ++motor)
     {
-        int enable = enable_pin[motor];
-        const bool bank1 = enable >= 32;
-        if (bank1)
-            enable -= 32;
         if (!step_enable[motor])
+            continue;
+        enabled = true;
+        if (step_pin_active[motor])
         {
-            if (bank1)
-                REG_WRITE(GPIO_OUT1_W1TC_REG, 1ULL << enable);
-            else
-                REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << enable);
+            // Turn step pin off
+            //i2s_data &= ~(1 << step_bit[motor]);
+            step_pin_active[motor] = false;
+            // Prepare for next step
+            remaining_ticks[motor] = delay[motor];
             continue;
         }
-
+        if (remaining_ticks[motor] > 0)
+        {
+            --remaining_ticks[motor];
+            continue;
+        }
         if (steps_left[motor] > 0)
         {
             --steps_left[motor];
-            if (bank1)
-                REG_WRITE(GPIO_OUT1_W1TS_REG, 1ULL << enable);
-            else
-                REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << enable);
-
+            // Time expired, set direction pin
             if (step_forward[motor])
-            {
-                ++current_phase[motor];
-                if (current_phase[motor] >= NOF_MICRO_STEPS)
-                    current_phase[motor] = 0;
-            }
-            else
-            {
-                --current_phase[motor];
-                if (current_phase[motor] < 0)
-                    current_phase[motor] = NOF_MICRO_STEPS - 1;
-            }
-            step(current_phase[motor]);
+                i2s_data |= 1 << dir_bit[motor];
+            //else
+            //    i2s_data &= ~(1 << dir_bit[motor]);
+            // Turn step pin on
+            i2s_data |= 1 << step_bit[motor];
+            step_pin_active[motor] = true;
         }
         else
-        {
-            // no more work, disable driver
-            if (bank1)
-                REG_WRITE(GPIO_OUT1_W1TC_REG, 1ULL << enable);
-            else
-                REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << enable);
             step_enable[motor] = false;
-        }
+    }
+    if (enabled)
+        i2s_data |= 1;
+    if (i2s_data != last_i2s_data)
+    {
+        i2s_shiftout(i2s_data);
+        last_i2s_data = i2s_data;
     }
     return false;
 }
 
 static gptimer_handle_t gptimer = nullptr;
 
-Stepper::Stepper(int _enable_pin)
+Stepper::Stepper(int _dir_bit,
+                 int _step_bit)
 {
     if (count == 0)
     {
+        // First instance: Set up timer
         gptimer_config_t config = {
             .clk_src = GPTIMER_CLK_SRC_DEFAULT,
             .direction = GPTIMER_COUNT_UP,
@@ -172,44 +127,23 @@ Stepper::Stepper(int _enable_pin)
             },
         };
         ESP_ERROR_CHECK(gptimer_new_timer(&config, &gptimer));
-
-        ledc_timer_config_t ledc_timer = {
-            .speed_mode = LEDC_LOW_SPEED_MODE,
-            .duty_resolution = LEDC_TIMER_10_BIT,
-            .timer_num = LEDC_TIMER_0,
-            .freq_hz = 20000,
-            .clk_cfg = LEDC_AUTO_CLK,
-            .deconfigure = 0,
+        gptimer_event_callbacks_t cbs = {
+            .on_alarm = timer_isr_callback,
         };
-        ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
-
-        ledc_channel_config_t pwm_channel = {
-            .gpio_num = PIN_A1,
-            .speed_mode = LEDC_LOW_SPEED_MODE,
-            .channel = LEDC_CHANNEL_0,
-            .intr_type = LEDC_INTR_DISABLE,
-            .timer_sel = LEDC_TIMER_0,
-            .duty = 0,
-            .hpoint = 0,
-            .sleep_mode = LEDC_SLEEP_MODE_NO_ALIVE_NO_PD,
+        ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &cbs, nullptr));
+        gptimer_alarm_config_t alarm_config = {
+            .alarm_count = 100,
+            .reload_count = 0, // counter will reload with 0 on alarm event
             .flags = 0,
         };
-        ESP_ERROR_CHECK(ledc_channel_config(&pwm_channel));
-
-        pwm_channel.gpio_num = PIN_A2;
-        pwm_channel.channel = LEDC_CHANNEL_1;
-        ESP_ERROR_CHECK(ledc_channel_config(&pwm_channel));
-
-        pwm_channel.gpio_num = PIN_B1;
-        pwm_channel.channel = LEDC_CHANNEL_2;
-        ESP_ERROR_CHECK(ledc_channel_config(&pwm_channel));
-
-        pwm_channel.gpio_num = PIN_B2;
-        pwm_channel.channel = LEDC_CHANNEL_3;
-        ESP_ERROR_CHECK(ledc_channel_config(&pwm_channel));
+        alarm_config.flags.auto_reload_on_alarm = true;
+        ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &alarm_config));
+        ESP_ERROR_CHECK(gptimer_enable(gptimer));
+        ESP_ERROR_CHECK(gptimer_start(gptimer));
     }
     motor = count;
-    enable_pin[count++] = _enable_pin;
+    dir_bit[count] = _dir_bit;
+    step_bit[count++] = _step_bit;
 }
 
 int Stepper::get_index() const
@@ -222,41 +156,12 @@ const calibration_data& Stepper::get_calibration()
     return ::get_calibration(motor);
 }
 
-void enable_timer()
-{
-    gptimer_event_callbacks_t cbs = {
-        .on_alarm = timer_isr_callback,
-    };
-    ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &cbs, nullptr));
-    ESP_ERROR_CHECK(gptimer_enable(gptimer));
-    timer_enabled = true;
-    ESP_ERROR_CHECK(gptimer_start(gptimer));
-}
-
-void set_timer_rate(uint64_t delay_us)
-{
-    gptimer_alarm_config_t alarm_config = {
-        .alarm_count = delay_us,
-        .reload_count = 0, // counter will reload with 0 on alarm event
-        .flags = 0,
-    };
-    alarm_config.flags.auto_reload_on_alarm = true;
-    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &alarm_config));
-}
-
 void Stepper::step(int nof_steps, uint64_t delay_us, bool wait)
 {
-    nof_steps *= NOF_MICRO_STEPS;
-    
     step_enable[motor] = false;
-    step_forward[motor] = nof_steps > 0;
-    steps_left[motor] = abs(nof_steps);
 
-    set_timer_rate(delay_us);
-
-    if (!timer_enabled)
-        enable_timer();
-
+    // TODO
+    
     step_enable[motor] = true;
 
     if (!wait)
@@ -269,12 +174,9 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait)
 void Stepper::start(bool forward, uint64_t delay_us)
 {
     step_forward[motor] = forward;
-    steps_left[motor] = 10000;
 
-    set_timer_rate(delay_us);
-
-    if (!timer_enabled)
-        enable_timer();
+    // TODO
+    //steps_left[motor] = 10000;
 
     step_enable[motor] = true;
 }
@@ -282,11 +184,6 @@ void Stepper::start(bool forward, uint64_t delay_us)
 void Stepper::stop()
 {
     step_enable[motor] = false;
-}
-
-bool Stepper::busy() const
-{
-    return step_enable[motor];
 }
 
 // Local Variables:

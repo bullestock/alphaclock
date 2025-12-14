@@ -1,12 +1,9 @@
 #include "hw.h"
 #include "defs.h"
-#include "nvs.h"
 
 #include <esp_log.h>
 
 #include <freertos/FreeRTOS.h>
-
-#include <unistd.h>
 
 void init_hardware()
 {
@@ -16,9 +13,9 @@ void init_hardware()
     io_conf.mode = GPIO_MODE_OUTPUT;
     // bit mask of the pins that you want to set
     io_conf.pin_bit_mask = 
-        (1ULL << PIN_EN1) |
-        (1ULL << PIN_EN2) |
-        (1ULL << PIN_EN3);
+        (1ULL << PIN_I2S_DATA) |
+        (1ULL << PIN_I2S_BCK) |
+        (1ULL << PIN_I2S_WS);
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     ESP_ERROR_CHECK(gpio_config(&io_conf));

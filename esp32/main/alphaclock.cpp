@@ -31,13 +31,14 @@ extern bool goto_zero[MOTOR_COUNT];
 extern "C"
 void app_main(void)
 {
-    init_hardware();
-
     const auto app_desc = esp_app_get_description();
     printf("AlphaClock v %s\n", app_desc->version);
-    
+
+    init_hardware();
+
     init_nvs();
 
+    bool connected = false;
     const auto wifi_creds = get_wifi_creds();
     if (!wifi_creds.empty())
     {
@@ -45,7 +46,6 @@ void app_main(void)
         ESP_ERROR_CHECK(esp_event_loop_create_default());
 
         int attempts_left = 2;
-        bool connected = false;
         while (!connected && attempts_left)
         {
             connected = connect(wifi_creds);
@@ -93,8 +93,9 @@ void app_main(void)
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
     Hand::set_debug(get_motor_debug());
-    
-    start_webserver();
+
+    if (connected)
+        start_webserver();
 
     extern bool is_button_pressed;
     bool was_button_pressed = false;

@@ -145,36 +145,23 @@ static int hands(int argc, char** argv)
 
 struct
 {
-    struct arg_int* hour;
+    struct arg_int* data;
     struct arg_end* end;
-} transition_args;
+} i2s_args;
 
-static int transition(int argc, char** argv)
+extern void i2s_shiftout(uint8_t data);
+
+static int i2s(int argc, char** argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &transition_args);
+    int nerrors = arg_parse(argc, argv, (void**) &i2s_args);
     if (nerrors != 0)
     {
-        arg_print_errors(stderr, transition_args.end, argv[0]);
+        arg_print_errors(stderr, i2s_args.end, argv[0]);
         return 1;
     }
 
-    int hour = transition_args.hour->ival[0];
-    int min = 59;
-    for (int sec_offset = 0; sec_offset < 5; ++sec_offset)
-    {
-        int sec = 59 + sec_offset;
-        if (sec >= 60)
-        {
-            if (sec == 60)
-            {
-                ++hour;
-                min = 0;
-            }
-            sec -= 60;
-        }
-        set_hands(hour, min, sec);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+    int data = i2s_args.data->ival[0];
+    i2s_shiftout(data);
     printf("Done\n");
 
     return 0;
@@ -419,18 +406,18 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&hands_cmd));
 
-    transition_args.hour = arg_int1(NULL, NULL, "<hour>", "Start hour (0-11)");
-    transition_args.end = arg_end(2);
-    const esp_console_cmd_t transition_cmd = {
-        .command = "transition",
-        .help = "Perform transition from one position to another",
+    i2s_args.data = arg_int1(NULL, NULL, "<data>", "Data");
+    i2s_args.end = arg_end(2);
+    const esp_console_cmd_t i2s_cmd = {
+        .command = "i2s",
+        .help = "Write I2S data",
         .hint = nullptr,
-        .func = &transition,
-        .argtable = &transition_args,
+        .func = &i2s,
+        .argtable = &i2s_args,
         .func_w_context = nullptr,
         .context = nullptr
     };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&transition_cmd));
+    ESP_ERROR_CHECK(esp_console_cmd_register(&i2s_cmd));
 
     calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     calibrate_args.reverse = arg_int1(NULL, NULL, "<reverse>", "Reverse (0, 1)");

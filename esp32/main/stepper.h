@@ -6,7 +6,7 @@
 class Stepper
 {
 public:
-    Stepper(int enable_pin);
+    Stepper(int dir_bit, int step_bit);
 
     int get_index() const;
 
@@ -17,8 +17,6 @@ public:
     void start(bool forward, uint64_t delay_us);
 
     void stop();
-
-    bool busy() const;
 
 private:
     int motor = 0;
