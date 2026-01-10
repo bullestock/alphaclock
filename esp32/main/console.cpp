@@ -173,6 +173,21 @@ static int i2s(int argc, char** argv)
     }
 
     int data = i2s_args.data->ival[0];
+#ifdef DEBUG_I2S
+    if (data > 255)
+    {
+        extern uint8_t i2s_debug_data[];
+        extern uint64_t i2s_debug_ts[];
+        extern int i2s_debug_index;
+
+        printf("Data:\n");
+        for (int i = 0; i < i2s_debug_index; ++i)
+            printf("%llu: %02X\n", i2s_debug_ts[i], i2s_debug_data[i]);
+        i2s_debug_index = 0;
+        return 0;
+    }
+#endif
+    
     i2s_shiftout(data);
     printf("Done\n");
 

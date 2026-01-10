@@ -6,13 +6,10 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include <driver/gptimer.h>
 #include <driver/ledc.h>
 #include <esp_timer.h>
 #include <rom/gpio.h>
 
-/// True if this motor is active; if not, all other variables are ignored
-static bool step_enable[MOTOR_COUNT];
 /// True if this motor goes forward
 static bool step_forward[MOTOR_COUNT];
 /// How many steps are left
@@ -21,17 +18,16 @@ static int steps_left[MOTOR_COUNT];
 static int delay[MOTOR_COUNT];
 /// Remaining ticks for each motor
 static int remaining_ticks[MOTOR_COUNT];
-/// Is the STEP pin active?
-static bool step_pin_active[MOTOR_COUNT];
+Stepper::State state[MOTOR_COUNT];
 /// I2S bits
 static int step_bit[MOTOR_COUNT];
 static int dir_bit[MOTOR_COUNT];
 /// Instance count
 static int count = 0;
 
-Stepper s_hours(2, 1); // X
-Stepper s_minutes(6, 5); // Y
-Stepper s_seconds(4, 3); // Z
+Stepper s_hours(5, 6);   // X: QC, QB
+Stepper s_minutes(1, 2); // Y: QG, QF
+Stepper s_seconds(3, 4); // Z: QE, QD
 
 void IRAM_ATTR i2s_shiftout(uint8_t data)
 {
@@ -55,51 +51,85 @@ void IRAM_ATTR i2s_shiftout(uint8_t data)
     REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << int(PIN_I2S_WS));
 }
 
+#ifdef DEBUG_I2S
+uint8_t i2s_debug_data[100];
+uint64_t i2s_debug_ts[100];
+int i2s_debug_index = 0;
+uint64_t i2s_current_debug_ts = 0;
+#endif
+
 static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
                                          const gptimer_alarm_event_data_t*,
                                          void*)
 {
+#ifdef DEBUG_I2S
+    ++i2s_current_debug_ts;
+#endif
     static uint8_t last_i2s_data = 0;
     uint8_t i2s_data = 0;
     bool enabled = false;
     for (int motor = 0; motor < MOTOR_COUNT; ++motor)
     {
-        if (!step_enable[motor])
+        if (state[motor] == Stepper::State::Idle)
             continue;
         enabled = true;
-        if (step_pin_active[motor])
+        switch (state[motor])
         {
-            // Turn step pin off
-            //i2s_data &= ~(1 << step_bit[motor]);
-            step_pin_active[motor] = false;
-            // Prepare for next step
-            remaining_ticks[motor] = delay[motor];
-            continue;
-        }
-        if (remaining_ticks[motor] > 0)
-        {
-            --remaining_ticks[motor];
-            continue;
-        }
-        if (steps_left[motor] > 0)
-        {
-            --steps_left[motor];
-            // Time expired, set direction pin
+        case Stepper::State::CountDown:
+            if (remaining_ticks[motor] > 0)
+                --remaining_ticks[motor];
+            else
+            {
+                remaining_ticks[motor] = delay[motor];
+                // Set DIR pin
+                state[motor] = Stepper::State::DirectionSet;
+                if (step_forward[motor])
+                    i2s_data |= 1 << dir_bit[motor];
+            }
+            break;
+            
+        case Stepper::State::DirectionSet:
+            // Preserve DIR pin state
             if (step_forward[motor])
                 i2s_data |= 1 << dir_bit[motor];
-            //else
-            //    i2s_data &= ~(1 << dir_bit[motor]);
-            // Turn step pin on
+            // Set STEP pin
             i2s_data |= 1 << step_bit[motor];
-            step_pin_active[motor] = true;
+            state[motor] = Stepper::State::StepSet1;
+            break;
+
+        case Stepper::State::StepSet1:
+            // Keep STEP pin set
+            i2s_data |= 1 << step_bit[motor];
+            state[motor] = Stepper::State::StepSet2;
+            break;
+            
+        case Stepper::State::StepSet2:
+            // Clear STEP pin
+            if (steps_left[motor]-- > 0)
+                state[motor] = Stepper::State::CountDown;
+            else
+                state[motor] = Stepper::State::Idle;
+            break;
+
+        case Stepper::State::Idle:
+            break;
+
+        default:
+            assert(false);
+            break;
         }
-        else
-            step_enable[motor] = false;
     }
-    if (enabled)
-        i2s_data |= 1;
+    if (!enabled)
+        i2s_data |= 0x80;   // XYZ_EN: QA
     if (i2s_data != last_i2s_data)
     {
+#ifdef DEBUG_I2S
+        if (i2s_debug_index < sizeof(i2s_debug_data))
+        {
+            i2s_debug_ts[i2s_debug_index] = i2s_current_debug_ts;
+            i2s_debug_data[i2s_debug_index++] = i2s_data;
+        }
+#endif
         i2s_shiftout(i2s_data);
         last_i2s_data = i2s_data;
     }
@@ -113,6 +143,9 @@ Stepper::Stepper(int _dir_bit,
 {
     if (count == 0)
     {
+        for (auto& s : state)
+            s = State::Idle;
+
         // First instance: Set up timer
         gptimer_config_t config = {
             .clk_src = GPTIMER_CLK_SRC_DEFAULT,
@@ -140,9 +173,9 @@ Stepper::Stepper(int _dir_bit,
         ESP_ERROR_CHECK(gptimer_enable(gptimer));
         ESP_ERROR_CHECK(gptimer_start(gptimer));
     }
-    motor = count;
-    dir_bit[count] = _dir_bit;
-    step_bit[count++] = _step_bit;
+    motor = count++;
+    dir_bit[motor] = _dir_bit;
+    step_bit[motor] = _step_bit;
 }
 
 int Stepper::get_index() const
@@ -157,11 +190,14 @@ const calibration_data& Stepper::get_calibration()
 
 void Stepper::step(int nof_steps, uint64_t delay_us, bool wait)
 {
-    step_enable[motor] = false;
+    state[motor] = State::Idle;
 
-    // TODO
+    step_forward[motor] = nof_steps > 0;
+    steps_left[motor] = abs(nof_steps);
+    delay[motor] = delay_us;
+    remaining_ticks[motor] = 1;
     
-    step_enable[motor] = true;
+    state[motor] = State::CountDown;
 
     if (!wait)
         return;
@@ -172,17 +208,19 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait)
 
 void Stepper::start(bool forward, uint64_t delay_us)
 {
+    state[motor] = State::Idle;
+
     step_forward[motor] = forward;
+    steps_left[motor] = 10000;
+    delay[motor] = delay_us;
+    remaining_ticks[motor] = 1;
 
-    // TODO
-    //steps_left[motor] = 10000;
-
-    step_enable[motor] = true;
+    state[motor] = State::CountDown;
 }
 
 void Stepper::stop()
 {
-    step_enable[motor] = false;
+    state[motor] = State::Idle;
 }
 
 // Local Variables:

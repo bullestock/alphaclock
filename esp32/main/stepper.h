@@ -3,10 +3,26 @@
 #include "defs.h"
 #include "nvs.h"
 
+#include <driver/gptimer.h>
+
 class Stepper
 {
 public:
     Stepper(int dir_bit, int step_bit);
+
+    enum class State
+    {
+        // Idle
+        Idle,
+        // Waiting for remaining steps to equal zero
+        CountDown,
+        // We have set the DIR input and can set STEP high on next iteration
+        DirectionSet,
+        // We have just set STEP high
+        StepSet1,
+        // We set STEP high in last iteration
+        StepSet2,
+    };
 
     int get_index() const;
 
