@@ -33,27 +33,26 @@ Stepper s_hours(2, 1); // X
 Stepper s_minutes(6, 5); // Y
 Stepper s_seconds(4, 3); // Z
 
-
 void IRAM_ATTR i2s_shiftout(uint8_t data)
 {
     // WS = 0
-    REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << 12);
+    REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << int(PIN_I2S_WS));
     int mask = 1;
     for (int i = 0; i < 8; ++i)
     {
         // Write a data bit to DATA
         if (mask & data)
-            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << 14);
+            REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << int(PIN_I2S_DATA));
         else
-            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << 14);
+            REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << int(PIN_I2S_DATA));
         // BCK = 1
-        REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << 11);
+        REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << int(PIN_I2S_BCK));
         // BCK = 0
-        REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << 11);
+        REG_WRITE(GPIO_OUT_W1TC_REG, 1ULL << int(PIN_I2S_BCK));
         mask <<= 1;
     }
     // WS = 1: Latch
-    REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << 12);
+    REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << int(PIN_I2S_WS));
 }
 
 static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,

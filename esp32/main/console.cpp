@@ -153,6 +153,18 @@ extern void i2s_shiftout(uint8_t data);
 
 static int i2s(int argc, char** argv)
 {
+    if (argc <= 1)
+    {
+        printf("Writing...\n");
+        uint8_t data = 0x55;
+        for (int i = 0; i < 100; ++i)
+        {
+            i2s_shiftout(data);
+            data ^= 0xFF;
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+        }
+        return 0;
+    }
     int nerrors = arg_parse(argc, argv, (void**) &i2s_args);
     if (nerrors != 0)
     {
