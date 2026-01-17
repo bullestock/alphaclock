@@ -74,17 +74,19 @@ void app_main(void)
     }
         
     printf("\n\nPress a key to enter console\n");
-    bool debug = false;
+    int debug = 0;
+    const int DEBUG_KEYPRESSES = 3;
     for (int i = 0; i < 20; ++i)
     {
         if (getchar() != EOF)
         {
-            debug = true;
-            break;
+            ++debug;
+            if (debug > DEBUG_KEYPRESSES)
+                break;
         }
         vTaskDelay(100/portTICK_PERIOD_MS);
     }
-    if (debug)
+    if (debug > DEBUG_KEYPRESSES)
         run_console();        // never returns
 
     printf("Starting app\n");
