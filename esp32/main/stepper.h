@@ -34,6 +34,9 @@ public:
 
     void stop();
 
+    // Wait for current operation to complete
+    void wait();
+
 private:
     int motor = 0;
 };

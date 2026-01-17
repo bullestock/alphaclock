@@ -120,7 +120,6 @@ void app_main(void)
                     delay *= 10;
                 if (!was_button_pressed)
                     was_button_pressed = true;
-                ESP_LOGI(TAG, "Active: %d", active_button);
                 auto stepper = steppers[active_button];
                 const auto& calibration = get_calibration(active_button);
                 stepper->start(!(button_direction_up ^ calibration.reverse), delay);

@@ -223,6 +223,12 @@ void Stepper::stop()
     state[motor] = State::Idle;
 }
 
+void Stepper::wait()
+{
+    while (state[motor] != State::Idle)
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+}
+
 // Local Variables:
 // compile-command: "cd .. && idf.py build"
 // End:

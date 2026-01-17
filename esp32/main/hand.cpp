@@ -27,7 +27,8 @@ void Hand::zero()
     current_position = 0;
 }
     
-void Hand::go_to(int position)
+void Hand::go_to(int position,
+                 bool wait)
 {
     // Compute new absolute position
     const auto& calibration = motor.get_calibration();
@@ -71,10 +72,15 @@ void Hand::go_to(int position)
         printf("%d steps\n", steps);
     if (std::abs(steps) > 0)
     {
-        motor.step(steps, get_motor_delay(), true);
+        motor.step(steps, get_motor_delay(), wait);
 
         current_position = target_steps;
     }
+}
+
+void Hand::wait()
+{
+    motor.wait();
 }
 
 // Hour hand mapping for Danish
@@ -118,9 +124,11 @@ void set_hands(int hour, int min, int sec)
     int fraction = 0;
     if (active_hour_mode == HOUR_MODE_CONTINUOUS)
         fraction = min;
-    h_seconds.go_to(sec);
-    h_minutes.go_to(min);
+    h_seconds.go_to(sec, false);
+    h_minutes.go_to(min, false);
     h_hours.go_to_hour(hour, fraction);
+    h_seconds.wait();
+    h_minutes.wait();
 
     last_hour = hour;
 }
