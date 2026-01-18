@@ -18,6 +18,8 @@ constexpr const auto PIN_I2S_DATA = (gpio_num_t) 21;
 constexpr const auto PIN_I2S_BCK  = (gpio_num_t) 16;
 constexpr const auto PIN_I2S_WS   = (gpio_num_t) 17;
 
+constexpr const auto DISPLAY_I2C_ADDRESS = 0x3C;
+
 constexpr const char* TAG = "ACLK";
 
 constexpr const int MOTOR_COUNT = 3;

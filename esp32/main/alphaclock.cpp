@@ -1,6 +1,8 @@
 #include "connect.h"
 #include "console.h"
 #include "defs.h"
+#include "display.h"
+#include "format.h"
 #include "hand.h"
 #include "hw.h"
 #include "nvs.h"
@@ -36,12 +38,17 @@ void app_main(void)
 
     init_hardware();
 
+    Display::instance().add_progress(format("V %s",
+                                            app_desc->version));
+    Display::instance().add_progress("NVS init");
+
     init_nvs();
 
     bool connected = false;
     const auto wifi_creds = get_wifi_creds();
     if (!wifi_creds.empty())
     {
+        Display::instance().add_progress("WiFi connect");
         ESP_ERROR_CHECK(esp_netif_init());
         ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -53,6 +60,7 @@ void app_main(void)
                      connected, attempts_left);
             if (!connected)
             {
+                Display::instance().add_progress("FAILED");
                 disconnect();
                 vTaskDelay(10000 / portTICK_PERIOD_MS);
                 --attempts_left;
@@ -63,7 +71,14 @@ void app_main(void)
             ESP_LOGI(TAG, "Connected to WiFi");
             ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
 
+            Display::instance().add_progress("SNTP synch");
             initialize_sntp();
+            const auto a = get_ip_address().addr;
+            Display::instance().add_progress(format("%d.%d.%d.%d",
+                                                    (a >> 24) & 255,
+                                                    (a >> 16) & 255,
+                                                    (a >> 8) & 255,
+                                                    a & 255));
         }
     }
 

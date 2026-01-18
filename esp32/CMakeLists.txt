@@ -5,4 +5,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
+set(EXTRA_COMPONENT_DIRS
+    ./components/ssd1306/esp-idf-ssd1306/components/ssd1306/)
+
 project(alphaclock)
+
