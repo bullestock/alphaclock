@@ -75,10 +75,10 @@ void app_main(void)
             initialize_sntp();
             const auto a = get_ip_address().addr;
             Display::instance().add_progress(format("%d.%d.%d.%d",
-                                                    (a >> 24) & 255,
-                                                    (a >> 16) & 255,
+                                                    a & 255,
                                                     (a >> 8) & 255,
-                                                    a & 255));
+                                                    (a >> 16) & 255,
+                                                    (a >> 24) & 255));
         }
     }
 
