@@ -18,9 +18,12 @@ constexpr const auto PIN_I2S_DATA = (gpio_num_t) 21;
 constexpr const auto PIN_I2S_BCK  = (gpio_num_t) 16;
 constexpr const auto PIN_I2S_WS   = (gpio_num_t) 17;
 
-constexpr const auto DISPLAY_I2C_ADDRESS = 0x3C;
+// Hall sensors (EXP1)
+constexpr const auto PIN_SENSOR_H = (gpio_num_t) 25;
+constexpr const auto PIN_SENSOR_M = (gpio_num_t) 26;
+constexpr const auto PIN_SENSOR_S = (gpio_num_t) 27;
 
-constexpr const char* TAG = "ACLK";
+constexpr const auto DISPLAY_I2C_ADDRESS = 0x3C;
 
 constexpr const int MOTOR_COUNT = 3;
 

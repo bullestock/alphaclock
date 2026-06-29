@@ -9,6 +9,8 @@
 #include <sys/param.h>
 #include "esp_netif.h"
 
+constexpr const char* TAG = "ws";
+
 bool is_button_pressed = false;
 int active_button = 0;
 bool button_direction_up = false;

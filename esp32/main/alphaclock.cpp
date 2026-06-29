@@ -19,6 +19,8 @@
 #include <esp_timer.h>
 #include <esp_wifi.h>
 
+constexpr const char* TAG = "aclock";
+
 void handle_normal_mode();
 void handle_fast_mode();
 void handle_zero();

@@ -4,3 +4,4 @@
 
 void init_hardware();
 
+bool is_sensor_activated(int index);

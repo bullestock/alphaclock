@@ -5,6 +5,8 @@
 #include "esp_log.h"
 #include "esp_sntp.h"
 
+constexpr const char* TAG = "sntp";
+
 void initialize_sntp()
 {
     ESP_LOGI(TAG, "Initializing SNTP");

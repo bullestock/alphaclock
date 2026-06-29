@@ -24,6 +24,8 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+constexpr const char* TAG = "connect";
+
 static SemaphoreHandle_t s_semph_get_ip_addrs;
 static esp_netif_t* s_esp_netif = NULL;
 

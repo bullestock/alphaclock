@@ -152,11 +152,6 @@ Stepper::Stepper(int _dir_bit,
             .direction = GPTIMER_COUNT_UP,
             .resolution_hz = 1 * 1000 * 1000, // 1MHz, 1 tick = 1us
             .intr_priority = 0,
-            .flags = {
-                .intr_shared = 0,
-                .allow_pd = 0,
-                .backup_before_sleep = 0,
-            },
         };
         ESP_ERROR_CHECK(gptimer_new_timer(&config, &gptimer));
         gptimer_event_callbacks_t cbs = {
