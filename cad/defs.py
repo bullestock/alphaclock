@@ -14,3 +14,5 @@ gear_inner_dia = 40
 gear_hole_cc = 30
 gear_hole_dia = 2.2
 gear_mount_th = 2
+
+magnet_dia = 2

@@ -1,6 +1,7 @@
 from build123d import *
 from ocp_vscode import *
 from defs import *
+from epilogue import *
 
 # Moving part for hours
 
@@ -25,7 +26,7 @@ with BuildPart() as p:
     # gear mount with screw holes
     Cylinder(gear_inner_dia/2, gear_mount_th)
     with Locations(p.faces().sort_by(Axis.Z)[-1]):
-        with PolarLocations(radius=gear_hole_cc/2, count=4):
+        with PolarLocations(radius=gear_hole_cc/2, count=4, start_angle=45):
             CounterSinkHole(gear_hole_dia/2, gear_hole_dia)
     # spacer
     with Locations([(0, 0, gear_mount_th/2)]):
@@ -52,7 +53,7 @@ with BuildPart() as p:
     # through hole
     Cylinder(i_dia/2, 50,
              mode=Mode.SUBTRACT)
+    with Locations((0, gear_inner_dia/2-magnet_dia/2-1)):
+        Cylinder(magnet_dia/2, 5, mode=Mode.SUBTRACT)
     
-show(p)
-
-export_step(p.part, 'hour.step')
+epilogue(p)
