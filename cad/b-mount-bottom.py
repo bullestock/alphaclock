@@ -1,6 +1,7 @@
 from build123d import *
 from ocp_vscode import *
 from defs import *
+from epilogue import *
 
 # Mount for hours bearing
 
@@ -9,13 +10,16 @@ bearing_id = 23.5
 bearing_th = 4
 b_crush = 0.6     # crush ribs radius
 flange_h = 1      # bearing retaining flange height
-extra_h = 2 # to clear motor
-total_h = bearing_th + flange_h + extra_h
+total_h = bearing_th + flange_h
+motor_z_offset = 6.5 # dual gears
 
 # worm gear dimensions
 worm_l, worm_dia, worm_cl = 7, 6, 2*2
 # gear wheel diameter
 gear_dia = 45
+
+motor_y = gear_dia/2 + worm_dia/2
+motor_x = -45
 
 bottom = (Align.CENTER, Align.CENTER, Align.MIN)
 
@@ -66,7 +70,7 @@ with BuildPart() as p:
 
     # worm gear cutout
     with BuildSketch():
-        with Locations((0, gear_dia/2 + worm_dia/2)):
+        with Locations((0, motor_y)):
             RectangleRounded(worm_l + worm_cl, worm_dia + worm_cl, 2)
     extrude(amount=2.5*bearing_th, mode=Mode.SUBTRACT)
     # insert holes for worm gear holder
@@ -74,31 +78,26 @@ with BuildPart() as p:
         with Locations((5, ow/2 - 5), (-5, ow/2 - 5)):
             Circle(insert_r - 0.1)
     extrude(amount=10, mode=Mode.SUBTRACT)
+    # motor mount holes
+    with BuildSketch():
+        with Locations([(motor_x, motor_y-motor_bracket_cc/2, 0), (motor_x, motor_y+motor_bracket_cc/2, 0)]):
+            Circle(insert_r)
+    extrude(amount=total_h, mode=Mode.SUBTRACT)
+    # sensor cutout
+    with BuildSketch():
+        with Locations((gear_inner_dia/2+sensor_h/2, 0)):
+            RectangleRounded(2*sensor_h, sensor_w, 2)
+    extrude(amount=sensor_th, mode=Mode.SUBTRACT)
 
 cutout_x = -50+2.5
 
 with BuildPart() as cutout:
-    # motor body
-    with BuildSketch():
-        with Locations((cutout_x, 25)):
-            RectangleRounded(25, 15 + 2*total_h, 1)
-    with BuildSketch(Plane.XY.offset(total_h)):
-        with Locations((cutout_x, 25)):
-            RectangleRounded(25, 15, 1)
-    loft()
-    # motor bracket
-    with BuildSketch():
-        with Locations((cutout_x+11., 25)):
-            RectangleRounded(2, 25, .5)
-    extrude(amount=total_h)
-    # groove for coupler
-    with BuildSketch(Plane.YZ.offset(-35)):
+    # groove for gear
+    with BuildSketch(Plane.YZ.offset(-40)):
         with Locations((25, 0)):
-            Circle(3)
-    extrude(amount=20)
+            Circle(4)
+    extrude(amount=25)
 
 p.part -= cutout.part
 
-show(p)
-
-export_step(p.part, 'mount-bottom.step')
+epilogue(p)

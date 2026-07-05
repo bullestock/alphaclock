@@ -16,3 +16,6 @@ gear_hole_dia = 2.2
 gear_mount_th = 2
 
 magnet_dia = 2
+sensor_w, sensor_h, sensor_th = 6, 10, 3
+wire_w = 3
+wire_h = 1
