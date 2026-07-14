@@ -79,29 +79,14 @@ static int test_motor(int argc, char** argv)
     return 0;
 }
 
-struct
-{
-    struct arg_int* sensor;
-    struct arg_end* end;
-} sensor_args;
-
 static int test_sensor(int argc, char** argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &sensor_args);
-    if (nerrors != 0)
-    {
-        arg_print_errors(stderr, sensor_args.end, argv[0]);
-        return 1;
-    }
-    const auto sensor = sensor_args.sensor->ival[0];
-    if (sensor < 0 || sensor >= MOTOR_COUNT)
-    {
-        printf("ERROR: Invalid sensor: %d\n", sensor);
-        return 1;
-    }
     for (int i = 0; i < 100; ++i)
     {
-        printf("Sensor %d: %d\n", sensor, is_sensor_activated(sensor));
+        printf("Sensors: %d%d%d\n",
+               is_sensor_activated(0),
+               is_sensor_activated(1),
+               is_sensor_activated(2));
         vTaskDelay(100/portTICK_PERIOD_MS);
     }
     printf("Done\n");
@@ -434,14 +419,12 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_cmd));
 
-    sensor_args.sensor = arg_int1(NULL, NULL, "<sensor>", "Sensor (0, 1, 2)");
-    sensor_args.end = arg_end(2);
     const esp_console_cmd_t test_sensor_cmd = {
         .command = "sensor",
         .help = "Test sensor",
         .hint = nullptr,
         .func = &test_sensor,
-        .argtable = &sensor_args,
+        .argtable = nullptr,
         .func_w_context = nullptr,
         .context = nullptr
     };

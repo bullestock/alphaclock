@@ -95,8 +95,8 @@ with BuildPart() as cutout:
     # groove for gear
     with BuildSketch(Plane.YZ.offset(-40)):
         with Locations((25, 0)):
-            Circle(4)
-    extrude(amount=25)
+            Circle(6)
+    extrude(amount=10)
 
 p.part -= cutout.part
 

@@ -2,7 +2,7 @@ from build123d import *
 from ocp_vscode import *
 from defs import *
 
-h = 2
+h = 4
 r1 = 4/2
 r2 = 2.1/2
 

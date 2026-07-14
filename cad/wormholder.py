@@ -1,6 +1,7 @@
 from build123d import *
 from ocp_vscode import *
 from defs import *
+from epilogue import *
 
 worm_l = 7
 spacer_l = 5
@@ -53,7 +54,4 @@ with BuildPart() as p:
     #        RectangleRounded(arm_l, arm_w, 1)
     #extrude(amount=-th)
     
-
-show(p)
-
-export_step(p.part, 'wormholder.step')
+epilogue(p)
