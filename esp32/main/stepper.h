@@ -28,7 +28,8 @@ public:
 
     const calibration_data& get_calibration();
 
-    void step(int nof_steps, uint64_t delay_us, bool wait = false);
+    void step(int nof_steps, uint64_t delay_us,
+              bool wait = false, bool debug = false);
 
     void start(bool forward, uint64_t delay_us);
 

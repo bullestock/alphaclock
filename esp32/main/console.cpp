@@ -72,14 +72,14 @@ static int test_motor(int argc, char** argv)
         printf("Stepping motor %d at %d us: %d\n",
                motor, delay, steps);
 
-        motors[motor]->step(steps, delay, true);
+        motors[motor]->step(steps, delay, true, true);
     }
     printf("Done\n");
 
     return 0;
 }
 
-static int test_sensor(int argc, char** argv)
+static int test_sensors(int argc, char** argv)
 {
     for (int i = 0; i < 100; ++i)
     {
@@ -419,16 +419,16 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_cmd));
 
-    const esp_console_cmd_t test_sensor_cmd = {
-        .command = "sensor",
+    const esp_console_cmd_t test_sensors_cmd = {
+        .command = "sensors",
         .help = "Test sensor",
         .hint = nullptr,
-        .func = &test_sensor,
+        .func = &test_sensors,
         .argtable = nullptr,
         .func_w_context = nullptr,
         .context = nullptr
     };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&test_sensor_cmd));
+    ESP_ERROR_CHECK(esp_console_cmd_register(&test_sensors_cmd));
 
     hand_args.hand = arg_str1(NULL, NULL, "<hand>", "Hand (h, m, s)");
     hand_args.where = arg_int1(NULL, NULL, "<where>", "Where (0-59)");

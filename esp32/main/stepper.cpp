@@ -1,4 +1,5 @@
 #include "stepper.h"
+#include "hw.h"
 
 #include <numbers>
 #include <math.h>
@@ -183,7 +184,7 @@ const calibration_data& Stepper::get_calibration()
     return ::get_calibration(motor);
 }
 
-void Stepper::step(int nof_steps, uint64_t delay_us, bool wait)
+void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
 {
     state[motor] = State::Idle;
 
@@ -197,8 +198,16 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait)
     if (!wait)
         return;
 
+    int count = 0;
     while (steps_left[motor] > 0)
+    {
         vTaskDelay(1);
+        if (++count >= 10)
+        {
+            count = 0;
+            printf("%d\n", is_sensor_activated(motor));
+        }
+    }
 }
 
 void Stepper::start(bool forward, uint64_t delay_us)
