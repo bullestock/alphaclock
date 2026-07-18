@@ -25,7 +25,7 @@ with BuildPart() as p:
         Circle(gear_inner_dia/2)
     extrude(amount=gear_mount_th)
     with Locations(p.faces().sort_by(Axis.Z)[-1]):
-        with PolarLocations(radius=gear_hole_cc/2, count=4):
+        with PolarLocations(radius=gear_hole_cc/2, count=4, start_angle=45):
             CounterSinkHole(gear_hole_dia/2, gear_hole_dia)
     # spacer
     with BuildSketch(p.faces().sort_by(Axis.Z)[-1]):
@@ -42,6 +42,8 @@ with BuildPart() as p:
     # through hole
     Cylinder(i_dia/2, 50,
              mode=Mode.SUBTRACT)
+    with Locations((0, gear_inner_dia/2-magnet_dia/2-1)):
+        Cylinder(magnet_dia/2, 5, mode=Mode.SUBTRACT)
     
 show(p)
 

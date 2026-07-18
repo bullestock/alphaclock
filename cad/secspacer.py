@@ -2,7 +2,7 @@ from build123d import *
 from ocp_vscode import *
 from defs import *
 
-h = 13.5 + 8 - 5
+h = 13
 r1 = 8/2
 r2 = 3.2/2
 cc = 25

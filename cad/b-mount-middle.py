@@ -62,6 +62,11 @@ with BuildPart() as p:
         with Locations((ow/2 - 5 + b_offset, 5), (ow/2 - 5 + b_offset, -5)):
             Circle(insert_r)
     extrude(amount=bearing_th + flange_h, mode=Mode.SUBTRACT)
+    # sensor cutout
+    with BuildSketch():
+        with Locations((-(gear_inner_dia/2+sensor_h*1.25), 0)):
+            RectangleRounded(sensor_h*2, sensor_w, 2)
+    extrude(amount=sensor_th, mode=Mode.SUBTRACT)
     
 show(p)
 
