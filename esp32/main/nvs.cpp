@@ -161,7 +161,7 @@ void init_nvs()
     if (nvs_get_u16(my_handle, MOTOR_DELAY_KEY, &tmp1) == ESP_OK)
         motor_delay = tmp1;
     else
-        motor_delay = 1000;
+        motor_delay = 100;
     uint8_t tmp2 = 0;
     if (nvs_get_u8(my_handle, MOTOR_DEBUG_KEY, &tmp2) == ESP_OK)
         motor_debug = tmp2;

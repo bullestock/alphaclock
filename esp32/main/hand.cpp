@@ -1,4 +1,5 @@
 #include "hand.h"
+#include "hw.h"
 #include "stepper.h"
 #include "websocket.h"
 
@@ -25,6 +26,62 @@ void Hand::set_debug(bool on)
 void Hand::zero()
 {
     current_position = 0;
+}
+    
+bool Hand::home()
+{
+    const auto index = motor.get_index();
+    const auto max_steps = static_cast<int>(motor.get_calibration().steps * 1.2);
+    // First make sure that sensor is not active
+    int i = 0;
+    const int MIN_STEPS = 8;
+    while (is_sensor_activated(index) && i < 1000)
+    {
+        motor.step(MIN_STEPS, 1, true);
+        ++i;
+    }
+    if (is_sensor_activated(index))
+    {
+        printf("Failed to clear sensor for motor %d\n", index);
+        return false;
+    }
+    // Now do the initial seek
+    for (int i = 0; i < max_steps; ++i)
+    {
+        motor.step(motor.get_calibration().reverse ? -MIN_STEPS : MIN_STEPS, 1, true);
+        if (is_sensor_activated(index))
+            break;
+    }
+    if (!is_sensor_activated(index))
+    {
+        printf("Failed to locate home position for motor %d\n", index);
+        return false;
+    }
+    // Back off slowly
+    for (int i = 0; i < 1000; ++i)
+    {
+        motor.step(motor.get_calibration().reverse ? MIN_STEPS : -MIN_STEPS, 5, true);
+        if (!is_sensor_activated(index))
+            break;
+    }
+    if (is_sensor_activated(index))
+    {
+        printf("Failed to back off for motor %d\n", index);
+        return false;
+    }
+    // Final slow home
+    for (int i = 0; i < 1000; ++i)
+    {
+        motor.step(motor.get_calibration().reverse ? -MIN_STEPS : MIN_STEPS, 5, true);
+        if (is_sensor_activated(index))
+            break;
+    }
+    if (!is_sensor_activated(index))
+    {
+        printf("Failed to home motor %d\n", index);
+        return false;
+    }
+    return true;
 }
     
 void Hand::go_to(int position,
@@ -131,6 +188,19 @@ void set_hands(int hour, int min, int sec)
     h_minutes.wait();
 
     last_hour = hour;
+}
+
+Hand& get_hand(int hand)
+{
+    switch (hand)
+    {
+    case 0:
+        return h_hours;
+    case 1:
+        return h_minutes;
+    default:
+        return h_seconds;
+    }
 }
 
 // Local Variables:

@@ -11,7 +11,11 @@ public:
 
     static void set_debug(bool on);
 
+    /// Set current position as zero
     void zero();
+
+    /// Go to home position
+    bool home();
     
     // Move to position 0-59
     void go_to(int position,
@@ -32,6 +36,8 @@ private:
 };
 
 extern void set_hands(int hour, int min, int sec);
+
+extern Hand& get_hand(int hand);
 
 extern Hand h_hours;
 extern Hand h_minutes;

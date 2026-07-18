@@ -342,6 +342,18 @@ int clear_wifi_credentials(int, char**)
     return 0;
 }
 
+int home_all(int, char**)
+{
+    for (int i = 0; i < MOTOR_COUNT; ++i)
+    {
+        printf("--- Homing %d\n", i);
+        if (!get_hand(i).home())
+            printf("FAIL\n");
+    }
+    
+    printf("OK: All hands homed\n");
+    return 0;
+}
 
 void initialize_console()
 {
@@ -385,6 +397,18 @@ void initialize_console()
     /* Set command history size */
     linenoiseHistorySetMaxLen(100);
 }
+
+#define REGISTER_CMD_NO_ARGS(cmd, helptxt, funcname) \
+    const esp_console_cmd_t cmd##_cmd = {            \
+        .command = #cmd,                             \
+        .help = helptxt,                             \
+        .hint = nullptr,                             \
+        .func = &funcname,                           \
+        .argtable = nullptr,                         \
+        .func_w_context = nullptr,                   \
+        .context = nullptr                           \
+    };                                               \
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd##_cmd))
 
 void run_console()
 {
@@ -487,16 +511,7 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&calibrate_cmd));
 
-    const esp_console_cmd_t zero_cmd = {
-        .command = "zero",
-        .help = "Set zero position",
-        .hint = nullptr,
-        .func = &zero,
-        .argtable = nullptr,
-        .func_w_context = nullptr,
-        .context = nullptr
-    };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&zero_cmd));
+    REGISTER_CMD_NO_ARGS(zero, "Set zero position", zero);
 
     motor_delay_args.on = arg_int1(NULL, NULL, "<delay>", "Delay in microseconds");
     motor_delay_args.end = arg_end(2);
@@ -549,17 +564,10 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&list_wifi_credentials_cmd));
 
-    const esp_console_cmd_t clear_wifi_credentials_cmd = {
-        .command = "clearwifi",
-        .help = "Clear WiFi credentials",
-        .hint = nullptr,
-        .func = &clear_wifi_credentials,
-        .argtable = nullptr,
-        .func_w_context = nullptr,
-        .context = nullptr
-    };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&clear_wifi_credentials_cmd));
+    REGISTER_CMD_NO_ARGS(clearwifi, "Clear WiFi credentials", clear_wifi_credentials);
 
+    REGISTER_CMD_NO_ARGS(home, "Home all hands", home_all);
+    
     const char* prompt = LOG_COLOR_I "alphaclock> " LOG_RESET_COLOR;
     int probe_status = linenoiseProbe();
     if (probe_status)

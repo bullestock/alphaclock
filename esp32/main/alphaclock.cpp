@@ -163,19 +163,6 @@ void app_main(void)
     }
 }
 
-Hand& get_hand(int hand)
-{
-    switch (hand)
-    {
-    case 0:
-        return h_hours;
-    case 1:
-        return h_minutes;
-    default:
-        return h_seconds;
-    }
-}
-
 void handle_zero()
 {
     for (int i = 0; i < MOTOR_COUNT; ++i)
