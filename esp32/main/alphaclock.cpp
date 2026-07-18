@@ -46,6 +46,10 @@ void app_main(void)
 
     init_nvs();
 
+    printf("\n\nPress a key to enter console\n");
+    int debug = 0;
+    const int DEBUG_KEYPRESSES = 3;
+
     bool connected = false;
     const auto wifi_creds = get_wifi_creds();
     if (!wifi_creds.empty())
@@ -57,6 +61,15 @@ void app_main(void)
         int attempts_left = 2;
         while (!connected && attempts_left)
         {
+            while (getchar() != EOF)
+            {
+                printf("<char>\n");
+                ++debug;
+                if (debug > DEBUG_KEYPRESSES)
+                    break;
+            }
+            if (debug > DEBUG_KEYPRESSES)
+                break;
             connected = connect(wifi_creds);
             ESP_LOGI(TAG, "Connected: %d attempts: %d",
                      connected, attempts_left);
@@ -90,9 +103,6 @@ void app_main(void)
         goto_zero[i] = false;
     }
         
-    printf("\n\nPress a key to enter console\n");
-    int debug = 0;
-    const int DEBUG_KEYPRESSES = 3;
     for (int i = 0; i < 20; ++i)
     {
         if (getchar() != EOF)
