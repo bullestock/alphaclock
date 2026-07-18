@@ -33,13 +33,17 @@ public:
 
     void start(bool forward, uint64_t delay_us);
 
-    void stop();
+    void stop(bool wait = false);
 
     // Wait for current operation to complete
     void wait();
 
+    // Return number of steps performed since last call to start()
+    int get_step_count();
+
 private:
     int motor = 0;
+    int steps = 0;
 };
 
 extern Stepper s_hours, s_minutes, s_seconds;

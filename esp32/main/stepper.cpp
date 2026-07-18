@@ -1,6 +1,7 @@
 #include "stepper.h"
 #include "hw.h"
 
+#include <limits>
 #include <numbers>
 #include <math.h>
 
@@ -20,9 +21,11 @@ static int delay[MOTOR_COUNT];
 /// Remaining ticks for each motor
 static int remaining_ticks[MOTOR_COUNT];
 Stepper::State state[MOTOR_COUNT];
+bool stopping[MOTOR_COUNT];
 /// I2S bits
 static int step_bit[MOTOR_COUNT];
 static int dir_bit[MOTOR_COUNT];
+int step_count[MOTOR_COUNT];
 /// Instance count
 static int count = 0;
 
@@ -69,8 +72,11 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
     static uint8_t last_i2s_data = 0;
     uint8_t i2s_data = 0;
     bool enabled = false;
+    const auto stopping_copy = stopping;
     for (int motor = 0; motor < MOTOR_COUNT; ++motor)
     {
+        if (stopping_copy[motor])
+            state[motor] = Stepper::State::Idle;
         if (state[motor] == Stepper::State::Idle)
             continue;
         enabled = true;
@@ -105,6 +111,7 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
             break;
             
         case Stepper::State::StepSet2:
+            ++step_count[motor];
             // Clear STEP pin
             if (steps_left[motor]-- > 0)
                 state[motor] = Stepper::State::CountDown;
@@ -134,6 +141,9 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
         i2s_shiftout(i2s_data);
         last_i2s_data = i2s_data;
     }
+    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+        if (stopping_copy[motor])
+            stopping[motor] = false;
     return false;
 }
 
@@ -146,6 +156,8 @@ Stepper::Stepper(int _dir_bit,
     {
         for (auto& s : state)
             s = State::Idle;
+        for (auto& s : stopping)
+            s = false;
 
         // First instance: Set up timer
         gptimer_config_t config = {
@@ -198,39 +210,41 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
     if (!wait)
         return;
 
-    int count = 0;
     while (steps_left[motor] > 0)
-    {
         vTaskDelay(1);
-        if (++count >= 10)
-        {
-            count = 0;
-            printf("%d\n", is_sensor_activated(motor));
-        }
-    }
 }
 
 void Stepper::start(bool forward, uint64_t delay_us)
 {
     state[motor] = State::Idle;
+    step_count[motor] = 0;
 
     step_forward[motor] = forward;
-    steps_left[motor] = 10000;
+    steps_left[motor] = std::numeric_limits<int>::max();
     delay[motor] = delay_us;
     remaining_ticks[motor] = 1;
 
     state[motor] = State::CountDown;
 }
 
-void Stepper::stop()
+void Stepper::stop(bool wait)
 {
-    state[motor] = State::Idle;
+    stopping[motor] = true;
+    if (!wait)
+        return;
+    while (stopping[motor])
+        vTaskDelay(1);
 }
 
 void Stepper::wait()
 {
     while (state[motor] != State::Idle)
         vTaskDelay(10 / portTICK_PERIOD_MS);
+}
+
+int Stepper::get_step_count()
+{
+    return step_count[motor];
 }
 
 // Local Variables:

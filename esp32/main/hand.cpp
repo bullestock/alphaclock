@@ -5,7 +5,10 @@
 
 #include <cmath>
 
+#include "esp_log.h"
 #include "esp_system.h"
+
+constexpr const char* TAG = "hand";
 
 static bool debug_motor = false;
 
@@ -34,48 +37,62 @@ bool Hand::home()
     const auto max_steps = static_cast<int>(motor.get_calibration().steps * 1.2);
     // First make sure that sensor is not active
     int i = 0;
-    const int MIN_STEPS = 8;
+    ESP_LOGI(TAG, "ensure inactive");
+    motor.start(true, 1);
     while (is_sensor_activated(index) && i < 1000)
     {
-        motor.step(MIN_STEPS, 1, true);
+        vTaskDelay(1);
         ++i;
     }
+    motor.stop(true);
     if (is_sensor_activated(index))
     {
         printf("Failed to clear sensor for motor %d\n", index);
         return false;
     }
     // Now do the initial seek
-    for (int i = 0; i < max_steps; ++i)
+    ESP_LOGI(TAG, "seek");
+    motor.start(motor.get_calibration().reverse, 1);
+    while (1)
     {
-        motor.step(motor.get_calibration().reverse ? -MIN_STEPS : MIN_STEPS, 1, true);
+        vTaskDelay(1);
         if (is_sensor_activated(index))
             break;
+        int step_count = motor.get_step_count();
+        if (step_count > max_steps)
+            break;
     }
+    motor.stop(true);
     if (!is_sensor_activated(index))
     {
         printf("Failed to locate home position for motor %d\n", index);
         return false;
     }
     // Back off slowly
-    for (int i = 0; i < 1000; ++i)
+    ESP_LOGI(TAG, "back off");
+    motor.start(!motor.get_calibration().reverse, 5);
+    for (int i = 0; i < 100; ++i)
     {
-        motor.step(motor.get_calibration().reverse ? MIN_STEPS : -MIN_STEPS, 5, true);
+        vTaskDelay(1);
         if (!is_sensor_activated(index))
             break;
     }
+    motor.stop(true);
     if (is_sensor_activated(index))
     {
         printf("Failed to back off for motor %d\n", index);
         return false;
     }
     // Final slow home
-    for (int i = 0; i < 1000; ++i)
+    ESP_LOGI(TAG, "homing");
+    motor.start(motor.get_calibration().reverse, 5);
+    for (int i = 0; i < 100; ++i)
     {
-        motor.step(motor.get_calibration().reverse ? -MIN_STEPS : MIN_STEPS, 5, true);
+        vTaskDelay(1);
         if (is_sensor_activated(index))
             break;
     }
+    motor.stop(true);
     if (!is_sensor_activated(index))
     {
         printf("Failed to home motor %d\n", index);
