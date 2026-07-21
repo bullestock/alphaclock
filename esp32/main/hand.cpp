@@ -98,6 +98,9 @@ bool Hand::home()
         printf("Failed to home motor %d\n", index);
         return false;
     }
+    ESP_LOGI(TAG, "apply offset");
+    motor.step(motor.get_calibration().offset *
+               motor.get_calibration().steps / 60.0, 1, true);
     return true;
 }
     

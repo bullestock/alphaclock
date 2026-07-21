@@ -4,9 +4,14 @@
 
 struct calibration_data
 {
+    // index
     uint8_t motor;
+    // should we run the motor in reverse to make the hand go clockwise?
     uint8_t reverse;
+    // number of steps per revolution
     double steps;
+    // offset from home position to hand "zero" (in "minutes")
+    double offset;
 };
 
 void init_nvs();
@@ -16,7 +21,7 @@ wifi_creds_t get_wifi_creds();
 void clear_wifi_credentials();
 void add_wifi_credentials(const char* ssid, const char* password);
 
-void set_calibration(int motor, int reverse, double steps);
+void set_calibration(int motor, int reverse, double steps, double offset);
 
 const calibration_data& get_calibration(int motor);
 

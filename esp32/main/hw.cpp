@@ -29,7 +29,8 @@ void init_hardware()
         (1ULL << PIN_SENSOR_M) |
         (1ULL << PIN_SENSOR_S);
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    // GPIO34-39 have no pullup
+    //io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
 }
 

@@ -212,8 +212,9 @@ static int i2s(int argc, char** argv)
 struct
 {
     struct arg_int* motor;
-    struct arg_int* reverse;
-    struct arg_dbl* steps;
+    struct arg_str* reverse;
+    struct arg_str* steps;
+    struct arg_str* offset;
     struct arg_end* end;
 } calibrate_args;
 
@@ -225,9 +226,10 @@ static int calibrate(int argc, char** argv)
         for (int i = 0; i < MOTOR_COUNT; ++i)
         {
             const auto& calibration = get_calibration(i);
-            printf("%d  %1d  %5.3f\n", i,
+            printf("%d  %1d  %5.3f  %2.3f\n", i,
                    calibration.reverse,
-                   calibration.steps);
+                   calibration.steps,
+                   calibration.offset);
         }
         return 0;
     }
@@ -243,10 +245,25 @@ static int calibrate(int argc, char** argv)
         printf("ERROR: Invalid motor: %d\n", motor);
         return 1;
     }
-    const auto reverse = calibrate_args.reverse->ival[0];
-    const auto steps = calibrate_args.steps->dval[0];
 
-    set_calibration(motor, reverse, steps);
+    const auto& calibration = get_calibration(motor);
+    auto reverse = calibration.reverse;
+    auto steps = calibration.steps;
+    auto offset = calibration.offset;
+
+    const auto reverse_s = calibrate_args.reverse->sval[0];
+    if (strlen(reverse_s) && isdigit(reverse_s[0]))
+        reverse = reverse_s[0] != '0';
+
+    const auto steps_s = calibrate_args.steps->sval[0];
+    if (strlen(steps_s) && isdigit(steps_s[0]))
+        steps = atof(steps_s);
+
+    const auto offset_s = calibrate_args.offset->sval[0];
+    if (strlen(offset_s) && (isdigit(offset_s[0]) || (offset_s[0] == '-')))
+        offset = atof(offset_s);
+
+    set_calibration(motor, reverse, steps, offset);
 
     printf("Done\n");
 
@@ -344,13 +361,19 @@ int clear_wifi_credentials(int, char**)
 
 int home_all(int, char**)
 {
+    bool ok = true;
     for (int i = 0; i < MOTOR_COUNT; ++i)
     {
         printf("--- Homing %d\n", i);
         if (!get_hand(i).home())
+        {
+            ok = false;
             printf("FAIL\n");
+        }
     }
-    
+
+    if (!ok)
+        return 1;
     printf("OK: All hands homed\n");
     return 0;
 }
@@ -497,8 +520,9 @@ void run_console()
     ESP_ERROR_CHECK(esp_console_cmd_register(&i2s_cmd));
 
     calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
-    calibrate_args.reverse = arg_int1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
-    calibrate_args.steps = arg_dbl1(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
+    calibrate_args.reverse = arg_str1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
+    calibrate_args.steps = arg_str1(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
+    calibrate_args.offset = arg_str1(NULL, NULL, "<offset>", "Offset from home position (+-30))");
     calibrate_args.end = arg_end(2);
     const esp_console_cmd_t calibrate_cmd = {
         .command = "calibrate",

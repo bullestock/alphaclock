@@ -210,8 +210,36 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
     if (!wait)
         return;
 
+    bool prev_sensor_state[MOTOR_COUNT];
+    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+        prev_sensor_state[motor] = is_sensor_activated(motor);
+    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+        printf("%d", prev_sensor_state[motor]);
+    printf("\n");
+    
     while (steps_left[motor] > 0)
+    {
         vTaskDelay(1);
+        if (debug)
+        {
+            bool sensor_state[MOTOR_COUNT];
+            bool changed = false;
+            for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+            {
+                sensor_state[motor] = is_sensor_activated(motor);
+                if (sensor_state[motor] != prev_sensor_state[motor])
+                    changed = true;
+            }
+            if (changed)
+            {
+                for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+                    printf("%d", sensor_state[motor]);
+                printf("\n");
+                for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+                    prev_sensor_state[motor] = sensor_state[motor];
+            }
+        }
+    }
 }
 
 void Stepper::start(bool forward, uint64_t delay_us)
