@@ -47,7 +47,10 @@ with BuildPart() as p:
         with Locations([ (motor_x, motor_z) ]):
             Circle(radius=mot_d/2)
     extrude(amount=-100, mode=Mode.SUBTRACT)
-    
+    with BuildSketch(Plane.XY.rotated((0, -45, 0))):
+        with Locations((-29, 45)):
+            Rectangle(mmdx, mmdx)
+    extrude(amount=30, mode=Mode.SUBTRACT)
 
 show(p)
-export_step(p.part, f"minstepperholder.step")
+export_step(p.part, f"secstepperholder.step")

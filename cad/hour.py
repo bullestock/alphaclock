@@ -7,7 +7,7 @@ from epilogue import *
 
 bearing_id = 20
 bearing_th = 4
-stem_h = 16.5
+stem_h = 16.5 - 3
 o_dia1 = 5.9
 o_dia2 = 7
 mount_h = 1.5

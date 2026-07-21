@@ -36,7 +36,7 @@ with BuildPart() as p:
     # insert holes
     with BuildSketch(Plane.XY):
         with Locations([(hole_x, hole_y - hole_cc/2), (hole_x, hole_y + hole_cc/2)]):
-            Circle(radius=insert_r)
+            Circle(radius=insert_r-0.2)
     extrude(amount=spacer_h, mode=Mode.SUBTRACT)
     # motor mount
     with BuildSketch(Plane.XY):
@@ -48,11 +48,17 @@ with BuildPart() as p:
         with Locations([ (motor_y, motor_z) ]):
             Circle(radius=mot_d/2)
     extrude(amount=50, mode=Mode.SUBTRACT)
-    # clearance
+    # clearance for gear
     with BuildSketch(Plane.XY):
         with Locations([ (-45/2 + 3, -dy1/2) ]):
             Circle(radius=45/2)
     extrude(amount=50, mode=Mode.SUBTRACT)
+    # clearance for bottom mount
+    w = 15
+    with BuildSketch(Plane.XY):
+        with Locations([ (w/2, -dy1/2) ]):
+            Rectangle(w, dy1)
+    extrude(amount=2, mode=Mode.SUBTRACT)
     
 
 show(p)
