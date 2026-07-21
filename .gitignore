@@ -1,3 +1,4 @@
 esp32/build
 *~
+*.step
 pcb/alphaclock-backups
