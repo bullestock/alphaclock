@@ -448,7 +448,7 @@
       "field_name_whitespace": "warning",
       "footprint_filter": "error",
       "footprint_link_issues": "warning",
-      "four_way_junction": "error",
+      "four_way_junction": "ignore",
       "ground_pin_not_ground": "warning",
       "hier_label_mismatch": "error",
       "isolated_pin_label": "warning",
@@ -648,7 +648,7 @@
         "uuid": "1fab524c-8e88-45c8-89e7-afa6211142d5"
       }
     ],
-    "used_designators": "#FLG1-3,C1-3,R1-6,RV1-3,#PWR1-17,J1-4,U1-3",
+    "used_designators": "#FLG1-3,D1-2,C1-4,R1-8,RV1-3,#PWR1-20,J1-4,U1-3",
     "variants": []
   },
   "sheets": [
