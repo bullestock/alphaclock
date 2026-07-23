@@ -6,4 +6,5 @@
 	(lib (name "MountingHole") (type "KiCad") (uri "${KIPRJMOD}/footprints/MountingHole.pretty") (options "") (descr ""))
 	(lib (name "Package_DIP") (type "KiCad") (uri "${KIPRJMOD}/footprints/Package_DIP.pretty") (options "") (descr ""))
 	(lib (name "Resistor_SMD") (type "KiCad") (uri "${KIPRJMOD}/footprints/Resistor_SMD.pretty") (options "") (descr ""))
+	(lib (name "Potentiometer_THT") (type "KiCad") (uri "${KIPRJMOD}/footprints/Potentiometer_THT.pretty") (options "") (descr ""))
 )

@@ -2909,8 +2909,8 @@
 				(justify right)
 			)
 		)
-		(property "Value" "10k"
-			(at 35.56 32.385 90)
+		(property "Value" "1k"
+			(at 35.56 33.02 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -2920,7 +2920,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Potentiometer_THT:Potentiometer_Trimmer_ACP_CA6v_Horizontal"
 			(at 35.56 34.29 0)
 			(hide yes)
 			(show_name no)
@@ -3595,7 +3595,6 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "2e35373e-65ac-4ebc-835d-bae4f5bd5cc8")
 		(property "Reference" "R5"
 			(at 38.1 76.1999 0)
@@ -3608,8 +3607,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
-			(at 38.1 78.7399 0)
+		(property "Value" "2k"
+			(at 35.56 78.74 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -4089,7 +4088,6 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "56d96da6-f6c3-4627-8082-51539e463d2a")
 		(property "Reference" "R4"
 			(at 38.1 24.1299 0)
@@ -4102,8 +4100,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
-			(at 38.1 26.6699 0)
+		(property "Value" "2k"
+			(at 35.56 26.67 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -4503,7 +4501,6 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "8a38c90b-6bc6-4e9b-9e7b-27e997186c61")
 		(property "Reference" "R3"
 			(at 38.1 41.9099 0)
@@ -4516,8 +4513,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
-			(at 38.1 44.4499 0)
+		(property "Value" "2k"
+			(at 35.56 44.45 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5595,8 +5592,8 @@
 				(justify right)
 			)
 		)
-		(property "Value" "10k"
-			(at 35.56 84.455 90)
+		(property "Value" "1k"
+			(at 35.56 85.09 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5606,7 +5603,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Potentiometer_THT:Potentiometer_Trimmer_ACP_CA6v_Horizontal"
 			(at 35.56 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -5781,7 +5778,6 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "dd10dad5-a039-439b-8a53-7c12cd32649f")
 		(property "Reference" "R6"
 			(at 38.1 93.9799 0)
@@ -5794,8 +5790,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
-			(at 38.1 96.5199 0)
+		(property "Value" "2k"
+			(at 35.56 96.52 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
