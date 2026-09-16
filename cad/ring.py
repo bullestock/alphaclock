@@ -2,7 +2,7 @@ from build123d import *
 from ocp_vscode import *
 
 od = 272+20 # was 10
-w = 35
+w = 48
 th = 2
 
 bottom = (Align.CENTER, Align.CENTER, Align.MIN)
