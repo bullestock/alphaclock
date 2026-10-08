@@ -39,31 +39,41 @@ bool Hand::home()
     int i = 0;
     ESP_LOGI(TAG, "ensure inactive");
     motor.start(true, 1);
-    while (is_sensor_activated(index) && i < 1000)
+    bool ok = false;
+    while (i < 1000)
     {
+        if (!is_sensor_activated(index))
+        {
+            ok = true;
+            break;
+        }
         vTaskDelay(1);
         ++i;
     }
     motor.stop(true);
-    if (is_sensor_activated(index))
+    if (!ok)
     {
-        printf("Failed to clear sensor for motor %d\n", index);
+        printf("Failed to clear sensor for motor %d (waited %d)\n", index, i);
         return false;
     }
     // Now do the initial seek
     ESP_LOGI(TAG, "seek");
     motor.start(motor.get_calibration().reverse, 1);
+    ok = false;
     while (1)
     {
         vTaskDelay(1);
         if (is_sensor_activated(index))
+        {
+            ok = true;
             break;
+        }
         int step_count = motor.get_step_count();
         if (step_count > max_steps)
             break;
     }
     motor.stop(true);
-    if (!is_sensor_activated(index))
+    if (!ok)
     {
         printf("Failed to locate home position for motor %d\n", index);
         return false;
@@ -71,14 +81,18 @@ bool Hand::home()
     // Back off slowly
     ESP_LOGI(TAG, "back off");
     motor.start(!motor.get_calibration().reverse, 5);
+    ok = false;
     for (int i = 0; i < 100; ++i)
     {
         vTaskDelay(1);
         if (!is_sensor_activated(index))
+        {
+            ok = true;
             break;
+        }
     }
     motor.stop(true);
-    if (is_sensor_activated(index))
+    if (!ok)
     {
         printf("Failed to back off for motor %d\n", index);
         return false;
@@ -86,14 +100,18 @@ bool Hand::home()
     // Final slow home
     ESP_LOGI(TAG, "homing");
     motor.start(motor.get_calibration().reverse, 5);
+    ok = false;
     for (int i = 0; i < 100; ++i)
     {
         vTaskDelay(1);
         if (is_sensor_activated(index))
+        {
+            ok = true;
             break;
+        }
     }
     motor.stop(true);
-    if (!is_sensor_activated(index))
+    if (!ok)
     {
         printf("Failed to home motor %d\n", index);
         return false;

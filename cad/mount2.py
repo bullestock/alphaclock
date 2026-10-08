@@ -4,21 +4,25 @@ from defs import *
 
 h = 7.5
 lip = 2
-d = 3
+d = 4
 r1 = 8.5/2
 r2 = 10/2
 r3 = 12/2
 
 with BuildPart() as p:
+    # outer
     with BuildSketch():
         Circle(r2)
     extrude(amount=h)
+    # lip
     with BuildSketch():
         Circle(r3)
     extrude(amount=lip)
+    # cavity
     with BuildSketch():
         Circle(r1)
     extrude(amount=d, mode=Mode.SUBTRACT)
+    # screwhole
     with BuildSketch():
         Circle(3.2/2)
     extrude(amount=10, mode=Mode.SUBTRACT)

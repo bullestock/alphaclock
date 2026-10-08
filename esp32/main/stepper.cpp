@@ -252,6 +252,7 @@ void Stepper::start(bool forward, uint64_t delay_us)
     delay[motor] = delay_us;
     remaining_ticks[motor] = 1;
 
+    stopping[motor] = false;
     state[motor] = State::CountDown;
 }
 

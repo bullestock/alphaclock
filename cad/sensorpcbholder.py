@@ -32,8 +32,8 @@ with BuildPart() as p:
     # lips
     with BuildSketch(first_z(p)):
         with GridLocations(2*pcb_w + dist + 1, 1, 2, 1):
-            Rectangle(brim_w+1, 5)
-    extrude(amount=2)
+            Rectangle(brim_w+1, 15)
+    extrude(amount=4)
     # pcb supports
     with BuildSketch(last_z(p).offset(-th)):
         with GridLocations(pcb_w + dist, 1, 2, 1):

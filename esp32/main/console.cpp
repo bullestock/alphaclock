@@ -18,6 +18,18 @@
 extern Stepper s_hours, s_minutes, s_seconds;
 extern Hand h_hours, h_minutes, h_seconds;
 
+Hand* get_hand(const char* hand)
+{
+    if ((hand[0] == 'h') || (hand[0] == 'H'))
+        return &h_hours;
+    if ((hand[0] == 'm') || (hand[0] == 'M'))
+        return &h_minutes;
+    if ((hand[0] == 's') || (hand[0] == 'S'))
+        return &h_seconds;
+    printf("ERROR: Invalid hand: %s\n", hand);
+    return nullptr;
+}
+
 static int reboot(int, char**)
 {
     printf("Reboot...\n");
@@ -109,19 +121,9 @@ static int hand(int argc, char** argv)
         arg_print_errors(stderr, hand_args.end, argv[0]);
         return 1;
     }
-    const auto hand = hand_args.hand->sval[0];
-    Hand* h = nullptr;
-    if ((hand[0] == 'h') || (hand[0] == 'H'))
-        h = &h_hours;
-    else if ((hand[0] == 'm') || (hand[0] == 'M'))
-        h = &h_minutes;
-    else if ((hand[0] == 's') || (hand[0] == 'S'))
-        h = &h_seconds;
-    else
-    {
-        printf("ERROR: Invalid hand: %s\n", hand);
+    Hand* h = get_hand(hand_args.hand->sval[0]);
+    if (!h)
         return 1;
-    }
     const auto where = hand_args.where->ival[0];
 
     h->go_to(where);
@@ -359,22 +361,32 @@ int clear_wifi_credentials(int, char**)
     return 0;
 }
 
-int home_all(int, char**)
+struct
 {
-    bool ok = true;
-    for (int i = 0; i < MOTOR_COUNT; ++i)
-    {
-        printf("--- Homing %d\n", i);
-        if (!get_hand(i).home())
-        {
-            ok = false;
-            printf("FAIL\n");
-        }
-    }
+    struct arg_str* hand;
+    struct arg_end* end;
+} home_args;
 
-    if (!ok)
+int home(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &home_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, home_args.end, argv[0]);
         return 1;
-    printf("OK: All hands homed\n");
+    }
+    Hand* h = get_hand(home_args.hand->sval[0]);
+    if (!h)
+        return 1;
+    printf("--- Homing\n");
+    if (h->home())
+    {
+        printf("OK: homed\n");
+        h->zero();
+    }
+    else
+        printf("FAIL\n");
+
     return 0;
 }
 
@@ -506,6 +518,19 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&hands_cmd));
 
+    home_args.hand = arg_str1(NULL, NULL, "<hand>", "Hand (h, m, s)");
+    home_args.end = arg_end(2);
+    const esp_console_cmd_t home_cmd = {
+        .command = "home",
+        .help = "Home hand(s)",
+        .hint = nullptr,
+        .func = &home,
+        .argtable = &home_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&home_cmd));
+    
     i2s_args.data = arg_int1(NULL, NULL, "<data>", "Data");
     i2s_args.end = arg_end(2);
     const esp_console_cmd_t i2s_cmd = {
@@ -590,8 +615,6 @@ void run_console()
 
     REGISTER_CMD_NO_ARGS(clearwifi, "Clear WiFi credentials", clear_wifi_credentials);
 
-    REGISTER_CMD_NO_ARGS(home, "Home all hands", home_all);
-    
     const char* prompt = LOG_COLOR_I "alphaclock> " LOG_RESET_COLOR;
     int probe_status = linenoiseProbe();
     if (probe_status)
