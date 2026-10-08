@@ -38,7 +38,7 @@ bool Hand::home()
     // First make sure that sensor is not active
     int i = 0;
     ESP_LOGI(TAG, "ensure inactive");
-    motor.start(true, 1);
+    motor.start(true, 0);
     bool ok = false;
     while (i < 1000)
     {
@@ -58,7 +58,7 @@ bool Hand::home()
     }
     // Now do the initial seek
     ESP_LOGI(TAG, "seek");
-    motor.start(motor.get_calibration().reverse, 1);
+    motor.start(motor.get_calibration().reverse, 0);
     ok = false;
     while (1)
     {
@@ -80,7 +80,7 @@ bool Hand::home()
     }
     // Back off slowly
     ESP_LOGI(TAG, "back off");
-    motor.start(!motor.get_calibration().reverse, 5);
+    motor.start(!motor.get_calibration().reverse, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {
@@ -99,7 +99,7 @@ bool Hand::home()
     }
     // Final slow home
     ESP_LOGI(TAG, "homing");
-    motor.start(motor.get_calibration().reverse, 5);
+    motor.start(motor.get_calibration().reverse, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {
