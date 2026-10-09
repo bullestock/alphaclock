@@ -121,8 +121,11 @@ void app_main(void)
     esp_log_level_set("esp_wifi", ESP_LOG_ERROR);
     esp_log_level_set("wifi", ESP_LOG_ERROR);
 
-    Hand::set_debug(get_motor_debug());
+    for (int hand = 0; hand < MOTOR_COUNT; ++hand)
+        get_hand(hand).set_debug(get_motor_debug());
 
+    get_hand(0).set_debug(true); // debug always on for H
+    
     if (connected)
         start_webserver();
 

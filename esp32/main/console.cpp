@@ -227,7 +227,7 @@ struct
     struct arg_int* motor;
     struct arg_str* reverse;
     struct arg_str* steps;
-    struct arg_str* offset;
+    struct arg_str* sensor_position;
     struct arg_end* end;
 } calibrate_args;
 
@@ -242,7 +242,7 @@ static int calibrate(int argc, char** argv)
             printf("%d  %1d  %5.3f  %2.3f\n", i,
                    calibration.reverse,
                    calibration.steps,
-                   calibration.offset);
+                   calibration.sensor_position);
         }
         return 0;
     }
@@ -262,7 +262,7 @@ static int calibrate(int argc, char** argv)
     const auto& calibration = get_calibration(motor);
     auto reverse = calibration.reverse;
     auto steps = calibration.steps;
-    auto offset = calibration.offset;
+    auto sensor_position = calibration.sensor_position;
 
     const auto reverse_s = calibrate_args.reverse->sval[0];
     if (strlen(reverse_s) && isdigit(reverse_s[0]))
@@ -272,11 +272,11 @@ static int calibrate(int argc, char** argv)
     if (strlen(steps_s) && isdigit(steps_s[0]))
         steps = atof(steps_s);
 
-    const auto offset_s = calibrate_args.offset->sval[0];
-    if (strlen(offset_s) && (isdigit(offset_s[0]) || (offset_s[0] == '-')))
-        offset = atof(offset_s);
+    const auto sensor_position_s = calibrate_args.sensor_position->sval[0];
+    if (strlen(sensor_position_s) && (isdigit(sensor_position_s[0]) || (sensor_position_s[0] == '-')))
+        sensor_position = atof(sensor_position_s);
 
-    set_calibration(motor, reverse, steps, offset);
+    set_calibration(motor, reverse, steps, sensor_position);
 
     printf("Done\n");
 
@@ -465,7 +465,7 @@ void run_console()
     calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     calibrate_args.reverse = arg_str1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
     calibrate_args.steps = arg_str1(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
-    calibrate_args.offset = arg_str1(NULL, NULL, "<offset>", "Offset from home position (+-30))");
+    calibrate_args.sensor_position = arg_str1(NULL, NULL, "<sensor_position>", "Sensor position (0-60))");
     calibrate_args.end = arg_end(2);
     const esp_console_cmd_t calibrate_cmd = {
         .command = "calibrate",

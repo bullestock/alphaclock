@@ -41,11 +41,11 @@ void add_wifi_credentials(const char* ssid, const char* password)
     nvs_close(my_handle);
 }
 
-void set_calibration(int motor, int reverse, double steps, double offset)
+void set_calibration(int motor, int reverse, double steps, double sensor_position)
 {
     calibration[motor].reverse = reverse;
     calibration[motor].steps = steps;
-    calibration[motor].offset = offset;
+    calibration[motor].sensor_position = sensor_position;
     nvs_handle my_handle;
     ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &my_handle));
     ESP_ERROR_CHECK(nvs_set_blob(my_handle, CALIBRATION_KEY, calibration, sizeof(calibration)));
@@ -156,7 +156,7 @@ void init_nvs()
         {
             calibration[i].reverse = 0;
             calibration[i].steps = 100;
-            calibration[i].offset = 0.0;
+            calibration[i].sensor_position = 0.0;
         }
     }
     uint16_t tmp1 = 0;

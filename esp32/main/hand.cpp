@@ -10,8 +10,6 @@
 
 constexpr const char* TAG = "hand";
 
-static bool debug_motor = false;
-
 Hand h_hours(s_hours);
 Hand h_minutes(s_minutes);
 Hand h_seconds(s_seconds);
@@ -122,10 +120,12 @@ void Hand::go_to(int position,
 {
     // Compute new absolute position
     const auto& calibration = motor.get_calibration();
-    const int target_steps = std::round(calibration.steps * (position + calibration.offset) / 60.0);
+    const int target_steps = std::round(calibration.steps * (position + calibration.sensor_position) / 60.0);
 
     if (debug_motor)
     {
+        printf("Motor %d: Go to %d (with sensor position %.1f)\n",
+               motor.get_index(), position, position + calibration.sensor_position);               
         printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
                motor.get_index(), calibration.steps,
                current_position, target_steps, position);
@@ -199,6 +199,7 @@ void Hand::go_to_hour(int hour, int fraction)
         esp_restart();
     }
     int position = hour_map[hour] * 60/12 + fraction/12;
+    printf("Moving hour hand to logical %d, physical %d\n", hour, position);
     go_to(position);
 }
 

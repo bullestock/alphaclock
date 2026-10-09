@@ -10,8 +10,8 @@ struct calibration_data
     uint8_t reverse;
     // number of steps per revolution
     double steps;
-    // offset from home position to hand "zero" (in "minutes")
-    double offset;
+    // After homing, this is where the hand will be (in "minutes")
+    double sensor_position;
 };
 
 void init_nvs();
@@ -21,7 +21,7 @@ wifi_creds_t get_wifi_creds();
 void clear_wifi_credentials();
 void add_wifi_credentials(const char* ssid, const char* password);
 
-void set_calibration(int motor, int reverse, double steps, double offset);
+void set_calibration(int motor, int reverse, double steps, double sensor_position);
 
 const calibration_data& get_calibration(int motor);
 
