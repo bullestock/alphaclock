@@ -111,15 +111,10 @@ bool Hand::home()
         }
     }
     motor.stop(true);
-    if (!ok)
-    {
-        printf("Failed to home motor %d\n", index);
-        return false;
-    }
-    ESP_LOGI(TAG, "apply offset");
-    motor.step(motor.get_calibration().offset *
-               motor.get_calibration().steps / 60.0, 1, true);
-    return true;
+    if (ok)
+        return true;
+    printf("Failed to home motor %d\n", index);
+    return false;
 }
     
 void Hand::go_to(int position,
@@ -127,7 +122,7 @@ void Hand::go_to(int position,
 {
     // Compute new absolute position
     const auto& calibration = motor.get_calibration();
-    const int target_steps = std::round(calibration.steps * position / 60.0);
+    const int target_steps = std::round(calibration.steps * (position + calibration.offset) / 60.0);
 
     if (debug_motor)
     {

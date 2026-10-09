@@ -18,6 +18,8 @@
 extern Stepper s_hours, s_minutes, s_seconds;
 extern Hand h_hours, h_minutes, h_seconds;
 
+static bool console_active;
+
 Hand* get_hand(const char* hand)
 {
     if ((hand[0] == 'h') || (hand[0] == 'H'))
@@ -44,6 +46,15 @@ static int zero(int, char**)
     h_hours.zero();
     h_minutes.zero();
     h_seconds.zero();
+    
+    return 0;
+}
+
+static int exit_console(int, char**)
+{
+    printf("Exit console\n");
+
+    console_active = false;
     
     return 0;
 }
@@ -451,43 +462,21 @@ void run_console()
 
     esp_console_register_help_command();
 
-    const esp_console_cmd_t reboot_cmd = {
-        .command = "reboot",
-        .help = "Reboot",
+    calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
+    calibrate_args.reverse = arg_str1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
+    calibrate_args.steps = arg_str1(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
+    calibrate_args.offset = arg_str1(NULL, NULL, "<offset>", "Offset from home position (+-30))");
+    calibrate_args.end = arg_end(2);
+    const esp_console_cmd_t calibrate_cmd = {
+        .command = "calibrate",
+        .help = "Calibrate motors",
         .hint = nullptr,
-        .func = &reboot,
-        .argtable = nullptr,
+        .func = &calibrate,
+        .argtable = &calibrate_args,
         .func_w_context = nullptr,
         .context = nullptr
     };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&reboot_cmd));
-
-    motor_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
-    motor_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
-    motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");
-    motor_args.repeats = arg_int0(NULL, NULL, "<repeats>", "Number of steps");
-    motor_args.end = arg_end(2);
-    const esp_console_cmd_t test_motor_cmd = {
-        .command = "motor",
-        .help = "Test motor",
-        .hint = nullptr,
-        .func = &test_motor,
-        .argtable = &motor_args,
-        .func_w_context = nullptr,
-        .context = nullptr
-    };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_cmd));
-
-    const esp_console_cmd_t test_sensors_cmd = {
-        .command = "sensors",
-        .help = "Test sensor",
-        .hint = nullptr,
-        .func = &test_sensors,
-        .argtable = nullptr,
-        .func_w_context = nullptr,
-        .context = nullptr
-    };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&test_sensors_cmd));
+    ESP_ERROR_CHECK(esp_console_cmd_register(&calibrate_cmd));
 
     hand_args.hand = arg_str1(NULL, NULL, "<hand>", "Hand (h, m, s)");
     hand_args.where = arg_int1(NULL, NULL, "<where>", "Where (0-59)");
@@ -502,6 +491,8 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&hand_cmd));
+
+    REGISTER_CMD_NO_ARGS(exit, "Exit console", exit_console);
 
     hands_args.hour = arg_int1(NULL, NULL, "<hour>", "Hours (0-11)");
     hands_args.min = arg_int1(NULL, NULL, "<min>", "Minutes (0-59)");
@@ -544,23 +535,21 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&i2s_cmd));
 
-    calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
-    calibrate_args.reverse = arg_str1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
-    calibrate_args.steps = arg_str1(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
-    calibrate_args.offset = arg_str1(NULL, NULL, "<offset>", "Offset from home position (+-30))");
-    calibrate_args.end = arg_end(2);
-    const esp_console_cmd_t calibrate_cmd = {
-        .command = "calibrate",
-        .help = "Calibrate motors",
+    motor_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
+    motor_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
+    motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");
+    motor_args.repeats = arg_int0(NULL, NULL, "<repeats>", "Number of steps");
+    motor_args.end = arg_end(2);
+    const esp_console_cmd_t test_motor_cmd = {
+        .command = "motor",
+        .help = "Test motor",
         .hint = nullptr,
-        .func = &calibrate,
-        .argtable = &calibrate_args,
+        .func = &test_motor,
+        .argtable = &motor_args,
         .func_w_context = nullptr,
         .context = nullptr
     };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&calibrate_cmd));
-
-    REGISTER_CMD_NO_ARGS(zero, "Set zero position", zero);
+    ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_cmd));
 
     motor_delay_args.on = arg_int1(NULL, NULL, "<delay>", "Delay in microseconds");
     motor_delay_args.end = arg_end(2);
@@ -587,6 +576,30 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&motor_debug_cmd));
+
+    const esp_console_cmd_t reboot_cmd = {
+        .command = "reboot",
+        .help = "Reboot",
+        .hint = nullptr,
+        .func = &reboot,
+        .argtable = nullptr,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&reboot_cmd));
+
+    const esp_console_cmd_t test_sensors_cmd = {
+        .command = "sensors",
+        .help = "Test sensor",
+        .hint = nullptr,
+        .func = &test_sensors,
+        .argtable = nullptr,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&test_sensors_cmd));
+
+    REGISTER_CMD_NO_ARGS(zero, "Set zero position", zero);
 
     add_wifi_credentials_args.ssid = arg_str1(NULL, NULL, "<ssid>", "SSID");
     add_wifi_credentials_args.password = arg_strn(NULL, NULL, "<password>", 0, 1, "Password");
@@ -632,7 +645,8 @@ void run_console()
 #endif // CONFIG_LOG_COLORS
     }
 
-    while (true)
+    console_active = true;
+    while (console_active)
     {
         char* line = linenoise(prompt);
         if (!line)
