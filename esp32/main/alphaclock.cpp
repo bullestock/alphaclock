@@ -133,6 +133,22 @@ void app_main(void)
         &s_hours, &s_minutes, &s_seconds
     };
 
+    printf("Homing\n");
+    for (int hand = 0; hand < MOTOR_COUNT; ++hand)
+        if (!get_hand(hand).home())
+        {
+            printf("ERROR: Could not home hand %d\n", hand);
+            Display::instance().add_progress(format("Home error %d", hand));
+            vTaskDelay(10000 / portTICK_PERIOD_MS);
+            esp_restart();
+        }
+        else
+            get_hand(hand).zero();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    printf("Start clock\n");
+    active_mode = MODE_NORMAL;
+    
     while (1)
     {
         vTaskDelay(1);
