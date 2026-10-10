@@ -34,6 +34,12 @@ Hand* get_hand(const char* hand)
     return nullptr;
 }
 
+Stepper* get_motor(int motor)
+{
+    static Stepper* motors[] = { &s_hours, &s_minutes, &s_seconds };
+    return motors[motor];
+}
+
 static int reboot(int, char**)
 {
     printf("Reboot...\n");
@@ -90,14 +96,12 @@ static int test_motor(int argc, char** argv)
     if (motor_args.repeats->count > 0)
         repeats = motor_args.repeats->ival[0];
 
-    Stepper* motors[] = { &s_hours, &s_minutes, &s_seconds };
-
     for (int i = 0; i < repeats; ++i)
     {
         printf("Stepping motor %d at %d us: %d\n",
                motor, delay, steps);
 
-        motors[motor]->step(steps, delay, true, true);
+        get_motor(motor)->step(steps, delay, true, true);
     }
     printf("Done\n");
 
@@ -246,9 +250,48 @@ static int i2s(int argc, char** argv)
     return 0;
 }
 
+static int auto_calibrate(int motor)
+{
+    printf("Calibrating motor %d...\n", motor);
+    auto h = get_hand(motor);
+    h.home();
+
+    printf("Start\n");
+    const auto& calibration = get_calibration(h.get_motor().get_index());
+    h.get_motor().start(!calibration.reverse, 1);
+    int first_activated_step_count = -1;
+    bool sensor_deactivated = false;
+    int i = 0;
+    while (i++ < 100000)
+    {
+        vTaskDelay(1);
+        if (is_sensor_activated(h.get_motor().get_index()))
+        {
+            if (first_activated_step_count < 0)
+            {
+                first_activated_step_count = h.get_motor().get_step_count();
+            }
+            else if (sensor_deactivated)
+                break;
+        }
+        else
+        {
+            if (first_activated_step_count > 0)
+                sensor_deactivated = true;
+        }
+    }
+    h.get_motor().stop();
+    printf("First:  %d\n", first_activated_step_count);
+    const int second_activated_step_count = h.get_motor().get_step_count();
+    printf("Second: %d\n", second_activated_step_count);
+    printf("Steps:  %d\n", second_activated_step_count - first_activated_step_count);
+
+    return 0;
+}
+
 struct
 {
-    struct arg_int* motor;
+    struct arg_str* motor;
     struct arg_str* reverse;
     struct arg_str* steps;
     struct arg_str* sensor_position;
@@ -276,13 +319,51 @@ static int calibrate(int argc, char** argv)
         arg_print_errors(stderr, calibrate_args.end, argv[0]);
         return 1;
     }
-    const auto motor = calibrate_args.motor->ival[0];
+    const auto s_motor = calibrate_args.motor->sval[0];
+    if (strlen(s_motor) > 2)
+    {
+        printf("Invalid 'motor' argument\n");
+        return 1;
+    }
+    if (strlen(s_motor) > 1)
+    {
+        // Xa - auto calibrate specific motor
+        if (s_motor[1] != 'a')
+        {
+            printf("Invalid 'motor' argument\n");
+            return 1;
+        }
+        const int motor = *s_motor - '0';
+        if (motor < 0 || motor >= MOTOR_COUNT)
+        {
+            printf("Invalid 'motor' argument\n");
+            return 1;
+        }
+        return auto_calibrate(motor);
+    }
+    if (*s_motor == 'a')
+    {
+        // Auto calibrate all motors
+        for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+            if (auto_calibrate(motor))
+                return 1;
+        return 0;
+    }
+    const int motor = *s_motor - '0';
     if (motor < 0 || motor >= MOTOR_COUNT)
     {
         printf("ERROR: Invalid motor: %d\n", motor);
         return 1;
     }
 
+    if (calibrate_args.reverse->count < 1 ||
+        calibrate_args.steps->count < 1 ||
+        calibrate_args.sensor_position->count < 1)
+    {
+        printf("ERROR: Missing argument(s)\n");
+        return 1;
+    }
+    
     const auto& calibration = get_calibration(motor);
     auto reverse = calibration.reverse;
     auto steps = calibration.steps;
@@ -297,7 +378,7 @@ static int calibrate(int argc, char** argv)
         steps = atof(steps_s);
 
     const auto sensor_position_s = calibrate_args.sensor_position->sval[0];
-    if (strlen(sensor_position_s) && (isdigit(sensor_position_s[0]) || (sensor_position_s[0] == '-')))
+    if (strlen(sensor_position_s) && isdigit(sensor_position_s[0]))
         sensor_position = atof(sensor_position_s);
 
     set_calibration(motor, reverse, steps, sensor_position);
@@ -486,10 +567,10 @@ void run_console()
 
     esp_console_register_help_command();
 
-    calibrate_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
-    calibrate_args.reverse = arg_str1(NULL, NULL, "<reverse>", "Reverse (0, 1)");
-    calibrate_args.steps = arg_str1(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
-    calibrate_args.sensor_position = arg_str1(NULL, NULL, "<sensor_position>", "Sensor position (0-60))");
+    calibrate_args.motor = arg_str1(NULL, NULL, "<motor>", "Motor (0, 1, 2, 0a, 1a, 2a, a)");
+    calibrate_args.reverse = arg_str0(NULL, NULL, "<reverse>", "Reverse (0, 1)");
+    calibrate_args.steps = arg_str0(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
+    calibrate_args.sensor_position = arg_str0(NULL, NULL, "<sensor_position>", "Sensor position (0-60))");
     calibrate_args.end = arg_end(2);
     const esp_console_cmd_t calibrate_cmd = {
         .command = "calibrate",
