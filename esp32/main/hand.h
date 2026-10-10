@@ -28,6 +28,17 @@ public:
     // Wait for current operation to complete
     void wait();
 
+    // Get current position
+    int get_position() const
+    {
+        return current_position;
+    }
+
+    Stepper& get_motor()
+    {
+        return motor;
+    }
+
 private:
     Stepper& motor;
 

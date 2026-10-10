@@ -34,30 +34,33 @@ bool Hand::home()
     const auto index = motor.get_index();
     const auto max_steps = static_cast<int>(motor.get_calibration().steps * 1.2);
     // First make sure that sensor is not active
-    int i = 0;
-    ESP_LOGI(TAG, "ensure inactive");
-    motor.start(true, 0);
-    bool ok = false;
-    while (i < 1000)
+    if (is_sensor_activated(index))
     {
-        if (!is_sensor_activated(index))
+        ESP_LOGI(TAG, "ensure inactive");
+        motor.start(true, 0);
+        bool ok = false;
+        int i = 0;
+        while (i < 1000)
         {
-            ok = true;
-            break;
+            if (!is_sensor_activated(index))
+            {
+                ok = true;
+                break;
+            }
+            vTaskDelay(1);
+            ++i;
         }
-        vTaskDelay(1);
-        ++i;
-    }
-    motor.stop(true);
-    if (!ok)
-    {
-        printf("Failed to clear sensor for motor %d (waited %d)\n", index, i);
-        return false;
+        motor.stop(true);
+        if (!ok)
+        {
+            printf("Failed to clear sensor for motor %d (waited %d)\n", index, i);
+            return false;
+        }
     }
     // Now do the initial seek
     ESP_LOGI(TAG, "seek");
-    motor.start(motor.get_calibration().reverse, 0);
-    ok = false;
+    motor.start(!motor.get_calibration().reverse, 0);
+    bool ok = false;
     while (1)
     {
         vTaskDelay(1);
@@ -78,7 +81,7 @@ bool Hand::home()
     }
     // Back off slowly
     ESP_LOGI(TAG, "back off");
-    motor.start(!motor.get_calibration().reverse, 2);
+    motor.start(motor.get_calibration().reverse, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {
@@ -97,7 +100,7 @@ bool Hand::home()
     }
     // Final slow home
     ESP_LOGI(TAG, "homing");
-    motor.start(motor.get_calibration().reverse, 2);
+    motor.start(!motor.get_calibration().reverse, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {

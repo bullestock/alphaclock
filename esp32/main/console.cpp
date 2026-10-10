@@ -5,6 +5,8 @@
 #include "nvs.h"
 #include "stepper.h"
 
+#include <math.h>
+
 #include "esp_system.h"
 #include "esp_log.h"
 #include <esp_console.h>
@@ -135,12 +137,34 @@ static int hand(int argc, char** argv)
     Hand* h = get_hand(hand_args.hand->sval[0]);
     if (!h)
         return 1;
-    const auto where = hand_args.where->ival[0];
+    if (hand_args.where->count > 0)
+    {
+        const auto where = hand_args.where->ival[0];
 
-    h->go_to(where);
+        h->go_to(where);
 
-    printf("Done\n");
+        printf("Done\n");
+        return 0;
+    }
+    // No <where> specified, do a full revolution
 
+    const auto& calibration = get_calibration(h->get_motor().get_index());
+    h->get_motor().start(!calibration.reverse, 1);
+    bool sensor = false;
+    bool old_sensor = sensor;
+    const int steps = ceil(calibration.steps);
+    while (h->get_motor().get_step_count() < steps)
+    {
+        vTaskDelay(1);
+        sensor = is_sensor_activated(h->get_motor().get_index());
+        if (sensor != old_sensor)
+        {
+            const int count = h->get_motor().get_step_count();
+            printf("%d/%d: %d\n", count, steps, sensor);
+            old_sensor = sensor;
+        }
+    }
+    h->get_motor().stop();
     return 0;
 }
 
@@ -479,7 +503,7 @@ void run_console()
     ESP_ERROR_CHECK(esp_console_cmd_register(&calibrate_cmd));
 
     hand_args.hand = arg_str1(NULL, NULL, "<hand>", "Hand (h, m, s)");
-    hand_args.where = arg_int1(NULL, NULL, "<where>", "Where (0-59)");
+    hand_args.where = arg_int0(NULL, NULL, "<where>", "Where (0-59)");
     hand_args.end = arg_end(2);
     const esp_console_cmd_t hand_cmd = {
         .command = "hand",
