@@ -363,20 +363,34 @@ int motor_delay(int argc, char** argv)
 
 struct
 {
+    struct arg_int* motor;
     struct arg_int* on;
     struct arg_end* end;
 } motor_debug_args;
 
 int motor_debug(int argc, char** argv)
 {
+    if (argc <= 1)
+    {
+        printf("Motor debug:\n");
+        for (int i = 0; i < MOTOR_COUNT; ++i)
+            printf("%d: %d\n", i, get_motor_debug(i));
+        return 0;
+    }
     int nerrors = arg_parse(argc, argv, (void**) &motor_debug_args);
     if (nerrors != 0)
     {
         arg_print_errors(stderr, motor_debug_args.end, argv[0]);
         return 1;
     }
-    set_motor_debug(motor_debug_args.on->ival[0]);
-    printf("Motor debug set to %d\n", get_motor_debug());
+    const auto motor = motor_debug_args.motor->ival[0];
+    if (motor < 0 || motor >= MOTOR_COUNT)
+    {
+        printf("ERROR: Invalid motor: %d\n", motor);
+        return 1;
+    }
+    set_motor_debug(motor, motor_debug_args.on->ival[0]);
+    printf("Motor %d debug set to %d\n", motor, get_motor_debug(motor));
     return 0;
 }
 
@@ -605,6 +619,7 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&motor_delay_cmd));
 
+    motor_debug_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     motor_debug_args.on = arg_int1(NULL, NULL, "<on>", "On (0-1)");
     motor_debug_args.end = arg_end(2);
     const esp_console_cmd_t motor_debug_cmd = {

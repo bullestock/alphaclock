@@ -12,7 +12,7 @@ static wifi_creds_t wifi_creds;
 
 static calibration_data calibration[MOTOR_COUNT];
 
-static bool motor_debug;
+static bool motor_debug[MOTOR_COUNT];
 
 static int motor_delay;
 
@@ -116,20 +116,19 @@ int get_motor_delay()
     return motor_delay;
 }
 
-void set_motor_debug(bool on)
+void set_motor_debug(int motor, bool on)
 {
-    motor_debug = on;
+    motor_debug[motor] = on;
     nvs_handle my_handle;
     ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &my_handle));
-    ESP_ERROR_CHECK(nvs_set_u8(my_handle, MOTOR_DEBUG_KEY,
-                               static_cast<uint8_t>(motor_debug)));
+    ESP_ERROR_CHECK(nvs_set_blob(my_handle, MOTOR_DEBUG_KEY, motor_debug, sizeof(motor_debug)));
     ESP_ERROR_CHECK(nvs_commit(my_handle));
     nvs_close(my_handle);
 }
 
-bool get_motor_debug()
+bool get_motor_debug(int motor)
 {
-    return motor_debug;
+    return motor_debug[motor];
 }
 
 void init_nvs()
@@ -164,11 +163,10 @@ void init_nvs()
         motor_delay = tmp1;
     else
         motor_delay = 100;
-    uint8_t tmp2 = 0;
-    if (nvs_get_u8(my_handle, MOTOR_DEBUG_KEY, &tmp2) == ESP_OK)
-        motor_debug = tmp2;
-    else
-        motor_debug = false;
+    sz = sizeof(motor_debug);
+    if (nvs_get_blob(my_handle, MOTOR_DEBUG_KEY, motor_debug, &sz) != ESP_OK)
+        for (int i = 0; i < MOTOR_COUNT; ++i)
+            motor_debug[i] = false;
     nvs_close(my_handle);
 }
 

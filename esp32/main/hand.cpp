@@ -19,11 +19,6 @@ Hand::Hand(Stepper& m)
 {
 }
 
-void Hand::set_debug(bool on)
-{
-    debug_motor = on;
-}
-
 void Hand::zero()
 {
     current_position = 0;
@@ -125,11 +120,12 @@ void Hand::go_to(int position,
     // Compute new absolute position
     const auto& calibration = motor.get_calibration();
     const int target_steps = std::round(calibration.steps * (position + calibration.sensor_position) / 60.0);
-
+    const bool debug_motor = get_motor_debug(motor.get_index());
+    
     if (debug_motor)
     {
         printf("Motor %d: Go to %d (with sensor position %.1f)\n",
-               motor.get_index(), position, position + calibration.sensor_position);               
+               motor.get_index(), position, calibration.sensor_position);               
         printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
                motor.get_index(), calibration.steps,
                current_position, target_steps, position);

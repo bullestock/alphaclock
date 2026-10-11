@@ -165,6 +165,7 @@ Stepper::Stepper(int _dir_bit,
             .direction = GPTIMER_COUNT_UP,
             .resolution_hz = 1 * 1000 * 1000, // 1MHz, 1 tick = 1us
             .intr_priority = 0,
+            .flags = { },
         };
         ESP_ERROR_CHECK(gptimer_new_timer(&config, &gptimer));
         gptimer_event_callbacks_t cbs = {
@@ -200,7 +201,7 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
 {
     state[motor] = State::Idle;
 
-    debug |= get_motor_debug();
+    debug |= get_motor_debug(motor);
     
     step_forward[motor] = nof_steps > 0;
     steps_left[motor] = abs(nof_steps);

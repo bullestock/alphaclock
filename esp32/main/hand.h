@@ -9,8 +9,6 @@ class Hand
 public:
     Hand(Stepper& m);
 
-    void set_debug(bool on);
-
     /// Set current position as zero
     void zero();
 
@@ -41,8 +39,6 @@ public:
 
 private:
     Stepper& motor;
-
-    bool debug_motor = false;
 
     // In steps (0 through N-1, where N is steps/revolution)
     int current_position = 0;

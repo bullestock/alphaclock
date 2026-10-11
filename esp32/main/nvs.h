@@ -29,9 +29,9 @@ void set_motor_delay(int delay);
 
 int get_motor_delay();
 
-void set_motor_debug(bool on);
+void set_motor_debug(int motor, bool on);
 
-bool get_motor_debug();
+bool get_motor_debug(int motor);
 
 // Local Variables:
 // compile-command: "cd .. && idf.py build"
