@@ -21,18 +21,20 @@ Hand::Hand(Stepper& m)
 
 void Hand::zero()
 {
-    current_position = 0;
+    const auto& calibration = motor.get_calibration();
+    current_position = calibration.sensor_position/60.0 * calibration.steps;
 }
     
 bool Hand::home()
 {
     const auto index = motor.get_index();
-    const auto max_steps = static_cast<int>(motor.get_calibration().steps * 1.2);
+    const auto& calibration = motor.get_calibration();
+    const auto max_steps = static_cast<int>(calibration.steps * 1.2);
     // First make sure that sensor is not active
     if (is_sensor_activated(index))
     {
         ESP_LOGI(TAG, "ensure inactive");
-        motor.step(100 * (motor.get_calibration().reverse ? 1 : -1), 1, true);
+        motor.step(200 * (calibration.reverse ? 1 : -1), 1, true);
         motor.start(true, 0);
         bool ok = false;
         int i = 0;
@@ -55,7 +57,7 @@ bool Hand::home()
     }
     // Now do the initial seek
     ESP_LOGI(TAG, "seek");
-    motor.start(!motor.get_calibration().reverse, 0);
+    motor.start(!calibration.reverse, 0);
     bool ok = false;
     while (1)
     {
@@ -77,7 +79,7 @@ bool Hand::home()
     }
     // Back off slowly
     ESP_LOGI(TAG, "back off");
-    motor.start(motor.get_calibration().reverse, 2);
+    motor.start(calibration.reverse, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {
@@ -96,7 +98,7 @@ bool Hand::home()
     }
     // Final slow home
     ESP_LOGI(TAG, "homing");
-    motor.start(!motor.get_calibration().reverse, 2);
+    motor.start(!calibration.reverse, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {
@@ -108,10 +110,13 @@ bool Hand::home()
         }
     }
     motor.stop(true);
-    if (ok)
-        return true;
-    printf("Failed to home motor %d\n", index);
-    return false;
+    if (!ok)
+    {
+        printf("Failed to home motor %d\n", index);
+        return false;
+    }
+    zero();
+    return true;
 }
     
 void Hand::go_to(int position,
@@ -119,7 +124,7 @@ void Hand::go_to(int position,
 {
     // Compute new absolute position
     const auto& calibration = motor.get_calibration();
-    const int target_steps = std::round(calibration.steps * (position + calibration.sensor_position) / 60.0);
+    const int target_steps = std::round(calibration.steps * position / 60.0);
     const bool debug_motor = get_motor_debug(motor.get_index());
     
     if (debug_motor)
