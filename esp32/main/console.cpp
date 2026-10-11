@@ -199,57 +199,6 @@ static int hands(int argc, char** argv)
     return 0;
 }
 
-struct
-{
-    struct arg_int* data;
-    struct arg_end* end;
-} i2s_args;
-
-extern void i2s_shiftout(uint8_t data);
-
-static int i2s(int argc, char** argv)
-{
-    if (argc <= 1)
-    {
-        printf("Writing...\n");
-        uint8_t data = 0x55;
-        for (int i = 0; i < 100; ++i)
-        {
-            i2s_shiftout(data);
-            data ^= 0xFF;
-            vTaskDelay(10 / portTICK_PERIOD_MS);
-        }
-        return 0;
-    }
-    int nerrors = arg_parse(argc, argv, (void**) &i2s_args);
-    if (nerrors != 0)
-    {
-        arg_print_errors(stderr, i2s_args.end, argv[0]);
-        return 1;
-    }
-
-    int data = i2s_args.data->ival[0];
-#ifdef DEBUG_I2S
-    if (data > 255)
-    {
-        extern uint8_t i2s_debug_data[];
-        extern uint64_t i2s_debug_ts[];
-        extern int i2s_debug_index;
-
-        printf("Data:\n");
-        for (int i = 0; i < i2s_debug_index; ++i)
-            printf("%llu: %02X\n", i2s_debug_ts[i], i2s_debug_data[i]);
-        i2s_debug_index = 0;
-        return 0;
-    }
-#endif
-    
-    i2s_shiftout(data);
-    printf("Done\n");
-
-    return 0;
-}
-
 static int auto_calibrate(int motor)
 {
     printf("Calibrating motor %d...\n", motor);
@@ -627,19 +576,6 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&home_cmd));
     
-    i2s_args.data = arg_int1(NULL, NULL, "<data>", "Data");
-    i2s_args.end = arg_end(2);
-    const esp_console_cmd_t i2s_cmd = {
-        .command = "i2s",
-        .help = "Write I2S data",
-        .hint = nullptr,
-        .func = &i2s,
-        .argtable = &i2s_args,
-        .func_w_context = nullptr,
-        .context = nullptr
-    };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&i2s_cmd));
-
     motor_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     motor_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
     motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");

@@ -37,6 +37,7 @@ bool Hand::home()
     if (is_sensor_activated(index))
     {
         ESP_LOGI(TAG, "ensure inactive");
+        motor.step(100 * (motor.get_calibration().reverse ? 1 : -1), 1, true);
         motor.start(true, 0);
         bool ok = false;
         int i = 0;

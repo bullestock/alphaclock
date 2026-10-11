@@ -200,6 +200,8 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
 {
     state[motor] = State::Idle;
 
+    debug |= get_motor_debug();
+    
     step_forward[motor] = nof_steps > 0;
     steps_left[motor] = abs(nof_steps);
     delay[motor] = delay_us;
@@ -211,11 +213,14 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
         return;
 
     bool prev_sensor_state[MOTOR_COUNT];
-    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
-        prev_sensor_state[motor] = is_sensor_activated(motor);
-    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
-        printf("%d", prev_sensor_state[motor]);
-    printf("\n");
+    if (debug)
+    {
+        for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+            prev_sensor_state[motor] = is_sensor_activated(motor);
+        for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+            printf("%d", prev_sensor_state[motor]);
+        printf("\n");
+    }
     
     while (steps_left[motor] > 0)
     {
