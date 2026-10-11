@@ -21,7 +21,7 @@ public:
 
     // Move to remapped hour 0-12
     // Fraction is fractional hours (0-59)
-    void go_to_hour(int hour, int fraction);
+    void go_to_hour(int hour, int fraction, bool wait = true);
 
     // Wait for current operation to complete
     void wait();

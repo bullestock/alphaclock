@@ -194,7 +194,7 @@ static const int hour_map[12] = {
     0, // 11
 };
     
-void Hand::go_to_hour(int hour, int fraction)
+void Hand::go_to_hour(int hour, int fraction, bool wait)
 {
     if (hour >= 12)
         hour -= 12;
@@ -205,7 +205,7 @@ void Hand::go_to_hour(int hour, int fraction)
     }
     int position = hour_map[hour] * 60/12 + fraction/12;
     printf("Moving hour hand to logical %d, physical %d\n", hour, position);
-    go_to(position);
+    go_to(position, wait);
 }
 
 void set_hands(int hour, int min, int sec)
@@ -222,7 +222,7 @@ void set_hands(int hour, int min, int sec)
         fraction = min;
     h_seconds.go_to(sec, false);
     h_minutes.go_to(min, false);
-    h_hours.go_to_hour(hour, fraction);
+    h_hours.go_to_hour(hour, fraction, false);
     h_seconds.wait();
     h_minutes.wait();
 
