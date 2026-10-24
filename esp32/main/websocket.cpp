@@ -17,8 +17,6 @@ bool button_direction_up = false;
 bool is_button_fast = false;
 Mode active_mode = MODE_MANUAL;
 HourMode active_hour_mode = HOUR_MODE_DISCRETE;
-bool set_zero[MOTOR_COUNT];
-bool goto_zero[MOTOR_COUNT];
 
 void handle_up_down_button(uint8_t arg)
 {
@@ -67,28 +65,6 @@ void handle_mode_button(uint8_t arg)
     }
     ESP_LOGI(TAG, "Change to mode %d", arg);
     active_mode = static_cast<Mode>(arg);
-}
-
-void handle_set_zero_button(uint8_t arg)
-{
-    if (arg >= MOTOR_COUNT)
-    {
-        ESP_LOGE(TAG, "Invalid zero hand %d", arg);
-        return;
-    }
-    ESP_LOGI(TAG, "Zero hand %d", arg);
-    set_zero[arg] = true;
-}
-
-void handle_goto_zero_button(uint8_t arg)
-{
-    if (arg >= MOTOR_COUNT)
-    {
-        ESP_LOGE(TAG, "Invalid zero hand %d", arg);
-        return;
-    }
-    ESP_LOGI(TAG, "Hand %d go to zero", arg);
-    goto_zero[arg] = true;
 }
 
 static esp_err_t ws_handler(httpd_req_t *req)
@@ -155,16 +131,6 @@ static esp_err_t ws_handler(httpd_req_t *req)
         case 2:
             // Set hour mode
             handle_hour_mode_button(ws_pkt.payload[1]);
-            break;
-
-        case 3:
-            // Set zero
-            handle_set_zero_button(ws_pkt.payload[1]);
-            break;
-
-        case 4:
-            // Go to zero
-            handle_goto_zero_button(ws_pkt.payload[1]);
             break;
 
         default:

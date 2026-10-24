@@ -26,12 +26,18 @@ bool stopping[MOTOR_COUNT];
 static int step_bit[MOTOR_COUNT];
 static int dir_bit[MOTOR_COUNT];
 int step_count[MOTOR_COUNT];
+// Relative to homing position
+static int absolute_position[MOTOR_COUNT];
+static int sensor_activated_at[MOTOR_COUNT];
 /// Instance count
 static int count = 0;
 
 Stepper s_hours(5, 6);   // X: QC, QB
 Stepper s_minutes(1, 2); // Y: QG, QF
 Stepper s_seconds(3, 4); // Z: QE, QD
+
+// Maximum number of steps that sensor can be activated for (i.e. sensor dead zone)
+static const int SENSOR_ACTIVATION_COUNT = 2500;
 
 void IRAM_ATTR i2s_shiftout(uint8_t data)
 {
@@ -112,6 +118,7 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
             
         case Stepper::State::StepSet2:
             ++step_count[motor];
+            ++absolute_position[motor];
             // Clear STEP pin
             if (steps_left[motor]-- > 0)
                 state[motor] = Stepper::State::CountDown;
@@ -144,6 +151,18 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
     for (int motor = 0; motor < MOTOR_COUNT; ++motor)
         if (stopping_copy[motor])
             stopping[motor] = false;
+
+    // Check homing sensors
+    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+    {
+        const bool activated = is_sensor_activated(motor);
+        if (absolute_position[motor] < SENSOR_ACTIVATION_COUNT)
+            ; //sensor_activated_at[motor] = -1;
+        else
+            if (activated && !sensor_activated_at[motor])
+                sensor_activated_at[motor] = absolute_position[motor];
+    }
+
     return false;
 }
 
@@ -192,7 +211,7 @@ int Stepper::get_index() const
     return motor;
 }
 
-const calibration_data& Stepper::get_calibration()
+const calibration_data& Stepper::get_calibration() const
 {
     return ::get_calibration(motor);
 }
@@ -229,10 +248,12 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
         if (debug)
         {
             bool sensor_state[MOTOR_COUNT];
+            int position[MOTOR_COUNT];
             bool changed = false;
             for (int motor = 0; motor < MOTOR_COUNT; ++motor)
             {
                 sensor_state[motor] = is_sensor_activated(motor);
+                position[motor] = absolute_position[motor];
                 if (sensor_state[motor] != prev_sensor_state[motor])
                     changed = true;
             }
@@ -240,6 +261,9 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
             {
                 for (int motor = 0; motor < MOTOR_COUNT; ++motor)
                     printf("%d", sensor_state[motor]);
+                printf("    ");
+                for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+                    printf("%d ", position[motor]);
                 printf("\n");
                 for (int motor = 0; motor < MOTOR_COUNT; ++motor)
                     prev_sensor_state[motor] = sensor_state[motor];
@@ -277,9 +301,29 @@ void Stepper::wait()
         vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 
-int Stepper::get_step_count()
+int Stepper::get_step_count() const
 {
     return step_count[motor];
+}
+
+int Stepper::get_position() const
+{
+    return absolute_position[motor];
+}
+
+void Stepper::zero()
+{
+    absolute_position[motor] = 0;
+}
+
+int Stepper::get_sensor_activated_at() const
+{
+    return sensor_activated_at[motor];
+}
+
+void Stepper::clear_sensor_activated_at()
+{
+    sensor_activated_at[motor] = -1;
 }
 
 // Local Variables:

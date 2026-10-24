@@ -26,7 +26,7 @@ public:
 
     int get_index() const;
 
-    const calibration_data& get_calibration();
+    const calibration_data& get_calibration() const;
 
     void step(int nof_steps, uint64_t delay_us,
               bool wait = false, bool debug = false);
@@ -39,7 +39,16 @@ public:
     void wait();
 
     // Return number of steps performed since last call to start()
-    int get_step_count();
+    int get_step_count() const;
+
+    /// Set current position as absolute zero
+    void zero();
+
+    int get_position() const;
+
+    int get_sensor_activated_at() const;
+
+    void clear_sensor_activated_at();
 
 private:
     int motor = 0;

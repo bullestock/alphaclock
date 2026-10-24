@@ -9,9 +9,6 @@ class Hand
 public:
     Hand(Stepper& m);
 
-    /// Set current position as zero
-    void zero();
-
     /// Go to home position
     bool home();
     

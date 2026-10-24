@@ -23,14 +23,11 @@ constexpr const char* TAG = "aclock";
 
 void handle_normal_mode();
 void handle_fast_mode();
-void handle_zero();
 
 extern int active_button;
 extern bool button_direction_up;
 extern bool is_button_fast;
 extern Mode active_mode;
-extern bool set_zero[MOTOR_COUNT];
-extern bool goto_zero[MOTOR_COUNT];
 
 extern "C"
 void app_main(void)
@@ -97,12 +94,6 @@ void app_main(void)
         }
     }
 
-    for (int i = 0; i < MOTOR_COUNT; ++i)
-    {
-        set_zero[i] = false;
-        goto_zero[i] = false;
-    }
-        
     for (int i = 0; i < 20; ++i)
     {
         if (getchar() != EOF)
@@ -140,8 +131,6 @@ void app_main(void)
             vTaskDelay(10000 / portTICK_PERIOD_MS);
             esp_restart();
         }
-        else
-            get_hand(hand).zero();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     printf("Start clock\n");
@@ -150,7 +139,6 @@ void app_main(void)
     while (1)
     {
         vTaskDelay(1);
-        handle_zero();
         switch (active_mode)
         {
         case MODE_MANUAL:
@@ -183,25 +171,6 @@ void app_main(void)
         case MODE_FAST:
             handle_fast_mode();
             break;
-        }
-    }
-}
-
-void handle_zero()
-{
-    for (int i = 0; i < MOTOR_COUNT; ++i)
-    {
-        if (set_zero[i])
-        {
-            printf("Reset hand %d\n", i);
-            set_zero[i] = false;
-            get_hand(i).zero();
-        }
-        if (goto_zero[i])
-        {
-            printf("Move hand %d to 0\n", i);
-            goto_zero[i] = false;
-            get_hand(i).go_to(0);
         }
     }
 }

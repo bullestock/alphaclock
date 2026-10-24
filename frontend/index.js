@@ -25,13 +25,6 @@ window.addEventListener('load', () => {
     let secsUpFastBtn = byId('secsUpFast')
     let secsDownFastBtn = byId('secsDownFast')
 
-    let hoursSetZeroBtn = byId('hoursSetZero')
-    let minsSetZeroBtn = byId('minsSetZero')
-    let secsSetZeroBtn = byId('secsSetZero')
-    let hoursGoToZeroBtn = byId('hoursGoToZero')
-    let minsGoToZeroBtn = byId('minsGoToZero')
-    let secsGoToZeroBtn = byId('secsGoToZero')
-    
     ws.addEventListener('message', e => {
         console.log('WS msg: ' + e)
     })
@@ -90,20 +83,6 @@ window.addEventListener('load', () => {
         ws.send(dview.buffer)
     }
 
-    function handleSetZeroClick(hand) {
-        let dview = new DataView(new ArrayBuffer(2))
-        dview.setUint8(0, 3)
-        dview.setUint8(1, Number(hand))
-        ws.send(dview.buffer)
-    }
-
-    function handleGoToZeroClick(hand) {
-        let dview = new DataView(new ArrayBuffer(2))
-        dview.setUint8(0, 4)
-        dview.setUint8(1, Number(hand))
-        ws.send(dview.buffer)
-    }
-
     manBtn.addEventListener('pointerdown', () => {
         handleModeClick(0)
     })
@@ -151,25 +130,5 @@ window.addEventListener('load', () => {
             })
         }
     }
-
-    hoursSetZeroBtn.addEventListener('pointerdown', () => {
-        handleSetZeroClick(0)
-    })
-    minsSetZeroBtn.addEventListener('pointerdown', () => {
-        handleSetZeroClick(1)
-    })
-    secsSetZeroBtn.addEventListener('pointerdown', () => {
-        handleSetZeroClick(2)
-    })
-
-    hoursGoToZeroBtn.addEventListener('pointerdown', () => {
-        handleGoToZeroClick(0)
-    })
-    minsGoToZeroBtn.addEventListener('pointerdown', () => {
-        handleGoToZeroClick(1)
-    })
-    secsGoToZeroBtn.addEventListener('pointerdown', () => {
-        handleGoToZeroClick(2)
-    })
 })
 

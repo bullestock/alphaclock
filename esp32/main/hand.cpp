@@ -19,12 +19,6 @@ Hand::Hand(Stepper& m)
 {
 }
 
-void Hand::zero()
-{
-    const auto& calibration = motor.get_calibration();
-    current_position = calibration.sensor_position/60.0 * calibration.steps;
-}
-    
 bool Hand::home()
 {
     const auto index = motor.get_index();
@@ -115,7 +109,8 @@ bool Hand::home()
         printf("Failed to home motor %d\n", index);
         return false;
     }
-    zero();
+    motor.zero();
+    current_position = calibration.sensor_position/60.0 * calibration.steps;
     return true;
 }
     

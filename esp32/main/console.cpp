@@ -47,17 +47,6 @@ static int reboot(int, char**)
     return 0;
 }
 
-static int zero(int, char**)
-{
-    printf("Zeroing\n");
-
-    h_hours.zero();
-    h_minutes.zero();
-    h_seconds.zero();
-    
-    return 0;
-}
-
 static int exit_console(int, char**)
 {
     printf("Exit console\n");
@@ -145,9 +134,12 @@ static int hand(int argc, char** argv)
     {
         const auto where = hand_args.where->ival[0];
 
+        //h->get_motor().clear_sensor_activated_at();
         h->go_to(where);
 
-        printf("Done\n");
+        printf("Done - absolute position %d, sensor activated at %d\n",
+               h->get_motor().get_position(),
+               h->get_motor().get_sensor_activated_at());
         return 0;
     }
     // No <where> specified, do a full revolution
@@ -459,10 +451,7 @@ int home(int argc, char** argv)
         return 1;
     printf("--- Homing\n");
     if (h->home())
-    {
         printf("OK: homed\n");
-        h->zero();
-    }
     else
         printf("FAIL\n");
 
@@ -654,8 +643,6 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&test_sensors_cmd));
-
-    REGISTER_CMD_NO_ARGS(zero, "Set zero position", zero);
 
     add_wifi_credentials_args.ssid = arg_str1(NULL, NULL, "<ssid>", "SSID");
     add_wifi_credentials_args.password = arg_strn(NULL, NULL, "<password>", 0, 1, "Password");
