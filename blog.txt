@@ -1,0 +1,21 @@
+In December 2024 I stumbled over this meme, showing an analogue clock where the digits are sorted alphabetically instead of numerically:
+
+W6TTJJm.jpeg
+
+I immediately though that this would be a fun project and got hold of an IKEA <a href="https://www.ikea.com/gb/en/p/pluttis-wall-clock-black-10540847/">PLUTTIS</a>.
+
+My original thought was to reuse as much of the mechanism as possible - since the second and minute hands move normally, I planned to just add a motor to control the hour hand. That turned out to not be so simple, so I started designing a mechanism to control each clock hand with a dedicated stepper motor. This means that the only parts of the original clock that survived are the case and the clock hands.
+
+Predictably, I went through a number of iterations before I had something functional - the 10 mm diameter steppers I first tried were not quite strong enough, so I replaced them with 20 mm ones. Also, it turned out that rubber belts and 3D-printed pulleys introduced to much slippage to be reliable. So the final version uses store-bought plastic gear wheels and worm gears. Each gear wheel is fastened to a 3D-printed wheel, which rotates inside a ball bearing.
+
+I designed the parts using <a href="https://build123d.readthedocs.io/en/latest/">build123d</a> - here is what the part for the hour hand looks like:
+
+hour.png
+
+Note the use of <a href="https://www.marginallyclever.com/2020/09/have-you-heard-of-crush-ribs/">crush ribs</a>, which ensure a good fit of the ball bearing and the clock hand.
+
+As for the software side, I used my favourite microcontroller, the ESP32. Naturally the firmware uses SNTP to obtain the current time, and it also implements a web page allowing manual control of the clock:
+
+All the CAD files and SW can be found at <a href="https://github.com/bullestock/alphaclock/">https://github.com/bullestock/alphaclock/</a>.
+
+(If you are wondering about the order of the digits, they are ordered according to the Danish spelling of the numbers 1 through 12 - and I opted to keep 12 at the top).
