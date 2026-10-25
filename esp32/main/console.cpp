@@ -134,9 +134,9 @@ static int hand(int argc, char** argv)
     {
         const auto where = hand_args.where->ival[0];
 
-        //h->get_motor().clear_sensor_activated_at();
+        h->get_motor().clear_sensor_activated_at();
         h->go_to(where);
-
+        
         printf("Done - absolute position %d, sensor activated at %d\n",
                h->get_motor().get_position(),
                h->get_motor().get_sensor_activated_at());

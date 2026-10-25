@@ -158,8 +158,8 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
         const bool activated = is_sensor_activated(motor);
         if (absolute_position[motor] < SENSOR_ACTIVATION_COUNT)
             ; //sensor_activated_at[motor] = -1;
-        else
-            if (activated && !sensor_activated_at[motor])
+        else if (activated)
+            if (sensor_activated_at[motor] < 0)
                 sensor_activated_at[motor] = absolute_position[motor];
     }
 
@@ -177,6 +177,8 @@ Stepper::Stepper(int _dir_bit,
             s = State::Idle;
         for (auto& s : stopping)
             s = false;
+        for (auto& s : sensor_activated_at)
+            s = -1;
 
         // First instance: Set up timer
         gptimer_config_t config = {
