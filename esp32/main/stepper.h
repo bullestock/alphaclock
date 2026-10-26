@@ -24,6 +24,7 @@ public:
         StepSet2,
     };
 
+    /// Get index (H/M/S)
     int get_index() const;
 
     const calibration_data& get_calibration() const;
@@ -44,11 +45,16 @@ public:
     /// Set current position as absolute zero
     void zero();
 
+    /// Get current absolute position.
     int get_position() const;
 
+    /// Get absolute position at which the homing sensor was activated.
     int get_sensor_activated_at() const;
 
     void clear_sensor_activated_at();
+
+    /// Go to the specified absolute position.
+    void go_to(int position);
 
 private:
     int motor = 0;

@@ -14,8 +14,6 @@
 
 /// True if this motor goes forward
 static bool step_forward[MOTOR_COUNT];
-/// How many steps are left
-static int steps_left[MOTOR_COUNT];
 /// Delay in ticks for each motor
 static int delay[MOTOR_COUNT];
 /// Remaining ticks for each motor
@@ -27,7 +25,8 @@ static int step_bit[MOTOR_COUNT];
 static int dir_bit[MOTOR_COUNT];
 int step_count[MOTOR_COUNT];
 // Relative to homing position
-static int absolute_position[MOTOR_COUNT];
+static int current_position[MOTOR_COUNT];
+static int target_position[MOTOR_COUNT];
 static int sensor_activated_at[MOTOR_COUNT];
 /// Instance count
 static int count = 0;
@@ -118,9 +117,9 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
             
         case Stepper::State::StepSet2:
             ++step_count[motor];
-            ++absolute_position[motor];
+            current_position[motor] += step_forward[motor] ? 1 : -1;
             // Clear STEP pin
-            if (steps_left[motor]-- > 0)
+            if (target_position[motor] != current_position[motor])
                 state[motor] = Stepper::State::CountDown;
             else
                 state[motor] = Stepper::State::Idle;
@@ -156,11 +155,11 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
     for (int motor = 0; motor < MOTOR_COUNT; ++motor)
     {
         const bool activated = is_sensor_activated(motor);
-        if (absolute_position[motor] < SENSOR_ACTIVATION_COUNT)
+        if (current_position[motor] < SENSOR_ACTIVATION_COUNT)
             ; //sensor_activated_at[motor] = -1;
         else if (activated)
             if (sensor_activated_at[motor] < 0)
-                sensor_activated_at[motor] = absolute_position[motor];
+                sensor_activated_at[motor] = current_position[motor];
     }
 
     return false;
@@ -225,7 +224,7 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
     debug |= get_motor_debug(motor);
     
     step_forward[motor] = nof_steps > 0;
-    steps_left[motor] = abs(nof_steps);
+    target_position[motor] = current_position[motor] + nof_steps;
     delay[motor] = delay_us;
     remaining_ticks[motor] = 1;
     
@@ -244,8 +243,13 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
         printf("\n");
     }
     
-    while (steps_left[motor] > 0)
+    while (1)
     {
+        const auto current = current_position[motor];
+        const auto target = target_position[motor];
+        if (current == target)
+            break;
+        //printf("cur %d target %d\n", current, target);
         vTaskDelay(1);
         if (debug)
         {
@@ -255,7 +259,7 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
             for (int motor = 0; motor < MOTOR_COUNT; ++motor)
             {
                 sensor_state[motor] = is_sensor_activated(motor);
-                position[motor] = absolute_position[motor];
+                position[motor] = current_position[motor];
                 if (sensor_state[motor] != prev_sensor_state[motor])
                     changed = true;
             }
@@ -280,7 +284,7 @@ void Stepper::start(bool forward, uint64_t delay_us)
     step_count[motor] = 0;
 
     step_forward[motor] = forward;
-    steps_left[motor] = std::numeric_limits<int>::max();
+    target_position[motor] = current_position[motor] + forward ? -1 : 1;
     delay[motor] = delay_us;
     remaining_ticks[motor] = 1;
 
@@ -310,12 +314,13 @@ int Stepper::get_step_count() const
 
 int Stepper::get_position() const
 {
-    return absolute_position[motor];
+    return current_position[motor];
 }
 
 void Stepper::zero()
 {
-    absolute_position[motor] = 0;
+    current_position[motor] = 0;
+    target_position[motor] = 0;
 }
 
 int Stepper::get_sensor_activated_at() const
@@ -326,6 +331,11 @@ int Stepper::get_sensor_activated_at() const
 void Stepper::clear_sensor_activated_at()
 {
     sensor_activated_at[motor] = -1;
+}
+
+void Stepper::go_to(int position)
+{
+    target_position[motor] = position;
 }
 
 // Local Variables:
