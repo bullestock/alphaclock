@@ -311,7 +311,7 @@ void Stepper::start(bool forward, uint64_t delay_us)
     data.step_count = 0;
 
     data.forward = forward;
-    data.target_position = Stepper::wrap(data.current_position + forward ? -1 : 1,
+    data.target_position = Stepper::wrap(data.current_position + (forward ? -1 : 1),
                                          data.max_steps);
     printf("start: fwd %d cur %d wrapped %d\n", forward, data.current_position, data.target_position);
     data.delay = delay_us;
