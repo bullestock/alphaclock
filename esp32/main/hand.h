@@ -23,12 +23,6 @@ public:
     // Wait for current operation to complete
     void wait();
 
-    // Get current position
-    int get_position() const
-    {
-        return current_position;
-    }
-
     Stepper& get_motor()
     {
         return motor;
@@ -36,9 +30,7 @@ public:
 
 private:
     Stepper& motor;
-
-    // In steps (0 through N-1, where N is steps/revolution)
-    int current_position = 0;
+    int current_position = 0; // 0-59
 };
 
 extern void set_hands(int hour, int min, int sec);

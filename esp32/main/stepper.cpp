@@ -29,9 +29,12 @@ struct Data
     int current_position;
     int target_position;
     int sensor_activated_at;
+    // Copy of calibration data - set by Stepper::set_calibration()
+    bool reverse;
+    int max_steps;
 };
 
-Data motor_data[MOTOR_COUNT];
+static Data motor_data[MOTOR_COUNT];
 
 /// Instance count
 static int count = 0;
@@ -65,20 +68,23 @@ void IRAM_ATTR i2s_shiftout(uint8_t data)
     REG_WRITE(GPIO_OUT_W1TS_REG, 1ULL << int(PIN_I2S_WS));
 }
 
-#ifdef DEBUG_I2S
-uint8_t i2s_debug_data[100];
-uint64_t i2s_debug_ts[100];
-int i2s_debug_index = 0;
-uint64_t i2s_current_debug_ts = 0;
-#endif
+int Stepper::wrap(int pos, int max_steps)
+{
+    // Sanity check
+    if (max_steps == 0)
+        esp_restart();
+    while (pos < 0)
+        pos += max_steps;
+    while (pos >= max_steps)
+        pos -= max_steps;
+    return pos;
+}
+
 
 static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
                                          const gptimer_alarm_event_data_t*,
                                          void*)
 {
-#ifdef DEBUG_I2S
-    ++i2s_current_debug_ts;
-#endif
     static uint8_t last_i2s_data = 0;
     uint8_t i2s_data = 0;
     bool enabled = false;
@@ -127,9 +133,10 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
             break;
             
         case Stepper::State::StepSet2:
-            ++data.step_count;
-            data.current_position += data.forward ? 1 : -1;
             // Clear STEP pin
+            ++data.step_count;
+            data.current_position = Stepper::wrap(data.current_position + (data.forward ? 1 : -1),
+                                                  data.max_steps);
             if (data.target_position != data.current_position)
                 data.state = Stepper::State::CountDown;
             else
@@ -148,13 +155,6 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
         i2s_data |= 0x80;   // XYZ_EN: QA
     if (i2s_data != last_i2s_data)
     {
-#ifdef DEBUG_I2S
-        if (i2s_debug_index < sizeof(i2s_debug_data))
-        {
-            i2s_debug_ts[i2s_debug_index] = i2s_current_debug_ts;
-            i2s_debug_data[i2s_debug_index++] = i2s_data;
-        }
-#endif
         i2s_shiftout(i2s_data);
         last_i2s_data = i2s_data;
     }
@@ -177,6 +177,15 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
 }
 
 static gptimer_handle_t gptimer = nullptr;
+
+void Stepper::set_calibration()
+{
+    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+    {
+        motor_data[motor].reverse = static_cast<int>(::get_calibration(motor).reverse);
+        motor_data[motor].max_steps = static_cast<int>(::get_calibration(motor).steps);
+    }
+}
 
 Stepper::Stepper(int _dir_bit,
                  int _step_bit)
@@ -236,8 +245,11 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
 
     debug |= get_motor_debug(motor);
     
-    data.forward = nof_steps > 0;
-    data.target_position = data.current_position + nof_steps;
+    data.forward = data.reverse ^ (nof_steps > 0);
+    printf("step: motor %d max %d\n", motor, data.max_steps);
+    data.target_position = Stepper::wrap(data.current_position + (data.reverse ? -1 : 1) * nof_steps,
+                                         data.max_steps);
+    printf("step: cur %d wrapped %d\n", data.current_position, data.target_position);
     data.delay = delay_us;
     data.remaining_ticks = 1;
     
@@ -262,7 +274,7 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
         const auto target = data.target_position;
         if (current == target)
             break;
-        //printf("cur %d target %d\n", current, target);
+        printf("cur %d target %d steps %d\n", current, target, data.step_count);
         vTaskDelay(1);
         if (debug)
         {
@@ -299,7 +311,9 @@ void Stepper::start(bool forward, uint64_t delay_us)
     data.step_count = 0;
 
     data.forward = forward;
-    data.target_position = data.current_position + forward ? -1 : 1;
+    data.target_position = Stepper::wrap(data.current_position + forward ? -1 : 1,
+                                         data.max_steps);
+    printf("start: fwd %d cur %d wrapped %d\n", forward, data.current_position, data.target_position);
     data.delay = delay_us;
     data.remaining_ticks = 1;
 
@@ -349,9 +363,14 @@ void Stepper::clear_sensor_activated_at()
     motor_data[motor].sensor_activated_at = -1;
 }
 
-void Stepper::go_to(int position)
+void Stepper::go_to(int position, uint64_t delay_us, bool forward)
 {
-    motor_data[motor].target_position = position;
+    auto& data = motor_data[motor];
+    data.state = State::Idle;
+    data.forward = forward;
+    data.delay = delay_us;
+    data.target_position = position;
+    data.state = State::CountDown;
 }
 
 // Local Variables:

@@ -10,6 +10,10 @@ class Stepper
 public:
     Stepper(int dir_bit, int step_bit);
 
+    static void set_calibration();
+
+    static int wrap(int pos, int max_steps);
+    
     enum class State
     {
         // Idle
@@ -54,7 +58,7 @@ public:
     void clear_sensor_activated_at();
 
     /// Go to the specified absolute position.
-    void go_to(int position);
+    void go_to(int position, uint64_t delay_us, bool forward);
 
 private:
     int motor = 0;
@@ -62,3 +66,7 @@ private:
 };
 
 extern Stepper s_hours, s_minutes, s_seconds;
+
+// Local Variables:
+// compile-command: "cd .. && idf.py build"
+// End:

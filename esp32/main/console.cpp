@@ -60,30 +60,67 @@ struct
 {
     struct arg_int* motor;
     struct arg_int* delay;
-    struct arg_int* steps;
-    struct arg_int* repeats;
+    struct arg_int* position;
+    struct arg_int* reverse;
     struct arg_end* end;
-} motor_args;
+} motor_goto_args;
 
-static int test_motor(int argc, char** argv)
+static int test_motor_goto(int argc, char** argv)
 {
-    int nerrors = arg_parse(argc, argv, (void**) &motor_args);
+    int nerrors = arg_parse(argc, argv, (void**) &motor_goto_args);
     if (nerrors != 0)
     {
-        arg_print_errors(stderr, motor_args.end, argv[0]);
+        arg_print_errors(stderr, motor_goto_args.end, argv[0]);
         return 1;
     }
-    const auto motor = motor_args.motor->ival[0];
+    const auto motor = motor_goto_args.motor->ival[0];
     if (motor < 0 || motor >= MOTOR_COUNT)
     {
         printf("ERROR: Invalid motor: %d\n", motor);
         return 1;
     }
-    const auto delay = motor_args.delay->ival[0];
-    const auto steps = motor_args.steps->ival[0];
+    const auto delay = motor_goto_args.delay->ival[0];
+    const auto position = motor_goto_args.position->ival[0];
+    const auto reverse = motor_goto_args.reverse->ival[0];
+
+    printf("Moving motor %d to position %d at %d us\n",
+           motor, position, delay);
+
+    get_motor(motor)->go_to(position, delay, !reverse);
+
+    printf("Done\n");
+
+    return 0;
+}
+
+struct
+{
+    struct arg_int* motor;
+    struct arg_int* delay;
+    struct arg_int* steps;
+    struct arg_int* repeats;
+    struct arg_end* end;
+} motor_step_args;
+
+static int test_motor_step(int argc, char** argv)
+{
+    int nerrors = arg_parse(argc, argv, (void**) &motor_step_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, motor_step_args.end, argv[0]);
+        return 1;
+    }
+    const auto motor = motor_step_args.motor->ival[0];
+    if (motor < 0 || motor >= MOTOR_COUNT)
+    {
+        printf("ERROR: Invalid motor: %d\n", motor);
+        return 1;
+    }
+    const auto delay = motor_step_args.delay->ival[0];
+    const auto steps = motor_step_args.steps->ival[0];
     int repeats = 1;
-    if (motor_args.repeats->count > 0)
-        repeats = motor_args.repeats->ival[0];
+    if (motor_step_args.repeats->count > 0)
+        repeats = motor_step_args.repeats->ival[0];
 
     for (int i = 0; i < repeats; ++i)
     {
@@ -579,21 +616,37 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&home_cmd));
     
-    motor_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
-    motor_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
-    motor_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");
-    motor_args.repeats = arg_int0(NULL, NULL, "<repeats>", "Number of steps");
-    motor_args.end = arg_end(2);
-    const esp_console_cmd_t test_motor_cmd = {
-        .command = "motor",
-        .help = "Test motor",
+    motor_goto_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
+    motor_goto_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
+    motor_goto_args.position = arg_int1(NULL, NULL, "<position>", "Position");
+    motor_goto_args.reverse = arg_int1(NULL, NULL, "<reverse>", "Reverse");
+    motor_goto_args.end = arg_end(2);
+    const esp_console_cmd_t test_motor_goto_cmd = {
+        .command = "goto",
+        .help = "Test motor go_to()",
         .hint = nullptr,
-        .func = &test_motor,
-        .argtable = &motor_args,
+        .func = &test_motor_goto,
+        .argtable = &motor_goto_args,
         .func_w_context = nullptr,
         .context = nullptr
     };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_cmd));
+    ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_goto_cmd));
+
+    motor_step_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
+    motor_step_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
+    motor_step_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");
+    motor_step_args.repeats = arg_int0(NULL, NULL, "<repeats>", "Number of steps");
+    motor_step_args.end = arg_end(2);
+    const esp_console_cmd_t test_motor_step_cmd = {
+        .command = "step",
+        .help = "Test motor step()",
+        .hint = nullptr,
+        .func = &test_motor_step,
+        .argtable = &motor_step_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_step_cmd));
 
     motor_delay_args.on = arg_int1(NULL, NULL, "<delay>", "Delay in microseconds");
     motor_delay_args.end = arg_end(2);

@@ -42,6 +42,7 @@ void app_main(void)
     Display::instance().add_progress("NVS init");
 
     init_nvs();
+    Stepper::set_calibration();
 
     printf("\n\nPress a key to enter console\n");
     int debug = 0;

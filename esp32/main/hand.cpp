@@ -27,13 +27,15 @@ bool Hand::home()
     // First make sure that sensor is not active
     if (is_sensor_activated(index))
     {
-        ESP_LOGI(TAG, "ensure inactive");
+        ESP_LOGI(TAG, "back off");
         motor.step(200 * (calibration.reverse ? 1 : -1), 1, true);
+        ESP_LOGI(TAG, "ensure inactive");
         motor.start(true, 0);
         bool ok = false;
         int i = 0;
-        while (i < 1000)
+        while (i < 20)
         {
+            printf("pos %d\n", motor.get_position());
             if (!is_sensor_activated(index))
             {
                 ok = true;
@@ -110,7 +112,6 @@ bool Hand::home()
         return false;
     }
     motor.zero();
-    current_position = calibration.sensor_position/60.0 * calibration.steps;
     return true;
 }
     
@@ -119,53 +120,51 @@ void Hand::go_to(int position,
 {
     // Compute new absolute position
     const auto& calibration = motor.get_calibration();
-    const int target_steps = std::round(calibration.steps * position / 60.0);
+    const int target_motor_position = Stepper::wrap(std::round(calibration.steps * (position - calibration.sensor_position) / 60.0),
+                                                    calibration.steps);
+    const int current_motor_position = motor.get_position();
     const bool debug_motor = get_motor_debug(motor.get_index());
+    
+    int steps = target_motor_position - current_motor_position;
+    if (!steps)
+        return;
     
     if (debug_motor)
     {
         printf("Motor %d: Go to %d (with sensor position %.1f)\n",
-               motor.get_index(), position, calibration.sensor_position);               
+               motor.get_index(), position, calibration.sensor_position);
         printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
                motor.get_index(), calibration.steps,
-               current_position, target_steps, position);
+               current_motor_position, target_motor_position, position);
     }
 
-    int diff_steps = target_steps - current_position;
     bool reverse = calibration.reverse;
     if (debug_motor)
-        printf("diff %d reverse %d\n", diff_steps, reverse);
-    if (std::abs(diff_steps) > calibration.steps/2.0)
+        printf("diff %d reverse %d\n", steps, reverse);
+    if (std::abs(steps) > calibration.steps/2.0)
     {
         // We are more than 180 degrees from the target - or are we?
-        const auto wrapped_target_steps = target_steps + calibration.steps;
-        const int wrapped_diff_steps = wrapped_target_steps - current_position;
-        if (std::abs(wrapped_diff_steps) < std::abs(diff_steps))
+        const auto wrapped_target_motor_position = target_motor_position + calibration.steps;
+        const int wrapped_steps = wrapped_target_motor_position - current_motor_position;
+        if (std::abs(wrapped_steps) < std::abs(steps))
         {
             // It is faster to go the other way around
-            diff_steps = wrapped_diff_steps;
+            steps = wrapped_steps;
             if (debug_motor)
-                printf("Wrapped: %d steps reverse %d\n", diff_steps, reverse);
+                printf("Wrapped: %d steps reverse %d\n", steps, reverse);
         }
         else
         {
             if (debug_motor)
-                printf("Forward: %d steps reverse %d\n", diff_steps, reverse);
-            diff_steps = std::round(calibration.steps - std::abs(diff_steps));
+                printf("Forward: %d steps reverse %d\n", steps, reverse);
+            steps = std::round(calibration.steps - std::abs(steps));
             reverse = !reverse;
             if (debug_motor)
-                printf("Reverse: %d steps reverse %d\n", diff_steps, reverse);
+                printf("Reverse: %d steps reverse %d\n", steps, reverse);
         }
     }
-    const int steps = (reverse ? -1 : 1) * diff_steps;
-    if (debug_motor)
-        printf("%d steps\n", steps);
-    if (std::abs(steps) > 0)
-    {
-        motor.step(steps, get_motor_delay(), wait);
-
-        current_position = target_steps;
-    }
+    motor.go_to(target_motor_position, get_motor_delay(), !reverse);
+    current_position = position;
 }
 
 void Hand::wait()
