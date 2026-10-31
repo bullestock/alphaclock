@@ -136,7 +136,10 @@ static int test_motor_step(int argc, char** argv)
 
 static int test_sensors(int argc, char** argv)
 {
-    for (int i = 0; i < 100; ++i)
+    int count = 1;
+    if (argc > 1)
+        count = 100;
+    for (int i = 0; i < count; ++i)
     {
         printf("Sensors: %d%d%d\n",
                is_sensor_activated(0),
