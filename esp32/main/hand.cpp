@@ -27,15 +27,14 @@ bool Hand::home()
     // First make sure that sensor is not active
     if (is_sensor_activated(index))
     {
-        ESP_LOGI(TAG, "back off");
-        motor.step(200 * (calibration.reverse ? 1 : -1), 1, true);
         ESP_LOGI(TAG, "ensure inactive");
-        motor.start(true, 0);
+        motor.start(calibration.reverse, 0);
         bool ok = false;
         int i = 0;
-        while (i < 20)
+        while (i < 100)
         {
-            printf("pos %d\n", motor.get_position());
+            if ((i % 4) == 0)
+                printf("pos %d\n", motor.get_position());
             if (!is_sensor_activated(index))
             {
                 ok = true;
@@ -51,10 +50,11 @@ bool Hand::home()
             return false;
         }
     }
-    // Now do the initial seek
+    // Now do the initial seek: move forward until sensor is activated
     ESP_LOGI(TAG, "seek");
     motor.start(!calibration.reverse, 0);
     bool ok = false;
+    int i = 0;
     while (1)
     {
         vTaskDelay(1);
@@ -63,6 +63,9 @@ bool Hand::home()
             ok = true;
             break;
         }
+        ++i;
+        if (i > 10000)
+            break;
         int step_count = motor.get_step_count();
         if (step_count > max_steps)
             break;
@@ -73,7 +76,7 @@ bool Hand::home()
         printf("Failed to locate home position for motor %d\n", index);
         return false;
     }
-    // Back off slowly
+    // Back off slowly: move backward until sensor is no longer activated
     ESP_LOGI(TAG, "back off");
     motor.start(calibration.reverse, 2);
     ok = false;
@@ -92,7 +95,7 @@ bool Hand::home()
         printf("Failed to back off for motor %d\n", index);
         return false;
     }
-    // Final slow home
+    // Final slow home: move forward until sensor is activated
     ESP_LOGI(TAG, "homing");
     motor.start(!calibration.reverse, 2);
     ok = false;
