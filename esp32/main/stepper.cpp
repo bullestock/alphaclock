@@ -112,14 +112,14 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
                 data.remaining_ticks = data.delay;
                 // Set DIR pin
                 data.state = Stepper::State::DirectionSet;
-                if (data.forward)
+                if (data.forward ^ data.reverse)
                     i2s_data |= 1 << data.dir_bit;
             }
             break;
             
         case Stepper::State::DirectionSet:
             // Preserve DIR pin state
-            if (data.forward)
+            if (data.forward ^ data.reverse)
                 i2s_data |= 1 << data.dir_bit;
             // Set STEP pin
             i2s_data |= 1 << data.step_bit;
@@ -245,9 +245,9 @@ void Stepper::step(int nof_steps, uint64_t delay_us, bool wait, bool debug)
 
     debug |= get_motor_debug(motor);
     
-    data.forward = data.reverse ^ (nof_steps > 0);
+    data.forward = nof_steps > 0;
     printf("step: motor %d max %d\n", motor, data.max_steps);
-    data.target_position = Stepper::wrap(data.current_position + (data.reverse ? -1 : 1) * nof_steps,
+    data.target_position = Stepper::wrap(data.current_position + nof_steps,
                                          data.max_steps);
     printf("step: cur %d wrapped %d\n", data.current_position, data.target_position);
     data.delay = delay_us;

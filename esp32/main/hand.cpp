@@ -28,7 +28,7 @@ bool Hand::home()
     if (is_sensor_activated(index))
     {
         ESP_LOGI(TAG, "ensure inactive");
-        motor.start(calibration.reverse, 0);
+        motor.start(false, 0);
         bool ok = false;
         int i = 0;
         while (i < 100)
@@ -52,7 +52,7 @@ bool Hand::home()
     }
     // Now do the initial seek: move forward until sensor is activated
     ESP_LOGI(TAG, "seek");
-    motor.start(!calibration.reverse, 0);
+    motor.start(true, 0);
     bool ok = false;
     int i = 0;
     while (1)
@@ -78,7 +78,7 @@ bool Hand::home()
     }
     // Back off slowly: move backward until sensor is no longer activated
     ESP_LOGI(TAG, "back off");
-    motor.start(calibration.reverse, 2);
+    motor.start(false, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {
@@ -97,7 +97,7 @@ bool Hand::home()
     }
     // Final slow home: move forward until sensor is activated
     ESP_LOGI(TAG, "homing");
-    motor.start(!calibration.reverse, 2);
+    motor.start(true, 2);
     ok = false;
     for (int i = 0; i < 100; ++i)
     {
@@ -141,7 +141,7 @@ void Hand::go_to(int position,
                current_motor_position, target_motor_position, position);
     }
 
-    bool reverse = calibration.reverse;
+    bool reverse = false;
     if (debug_motor)
         printf("diff %d reverse %d\n", steps, reverse);
     if (std::abs(steps) > calibration.steps/2.0)

@@ -152,6 +152,13 @@ static int test_sensors(int argc, char** argv)
     return 0;
 }
 
+static int get_motor_pos(int argc, char** argv)
+{
+    for (int motor = 0; motor < MOTOR_COUNT; ++motor)
+        printf("Motor %d: Position %d\n", motor, get_motor(motor)->get_position());
+    return 0;
+}
+
 struct
 {
     struct arg_str* hand;
@@ -635,6 +642,8 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&test_motor_goto_cmd));
 
+    REGISTER_CMD_NO_ARGS(pos, "Get motor positions", get_motor_pos);
+    
     motor_step_args.motor = arg_int1(NULL, NULL, "<motor>", "Motor (0, 1, 2)");
     motor_step_args.delay = arg_int1(NULL, NULL, "<delay>", "Delay (us)");
     motor_step_args.steps = arg_int1(NULL, NULL, "<steps>", "Number of steps");
