@@ -178,6 +178,7 @@ void app_main(void)
 
 void handle_normal_mode()
 {
+    static bool first = true;
     static time_t last_time = 0;
     
     time_t t;
@@ -191,6 +192,15 @@ void handle_normal_mode()
 
     printf("Normal: %02d:%02d:%02d\n", tm.tm_hour, tm.tm_min, tm.tm_sec);
 
+    if (first)
+    {
+        // Set hour and minute hands first
+        set_hands(tm.tm_hour, tm.tm_min, -1);
+        // Update seconds
+        time(&t);
+        localtime_r(&t, &tm);
+        first = false;
+    }
     set_hands(tm.tm_hour, tm.tm_min, tm.tm_sec);
 }
 

@@ -218,7 +218,8 @@ void set_hands(int hour, int min, int sec)
     int fraction = 0;
     if (active_hour_mode == HOUR_MODE_CONTINUOUS)
         fraction = min;
-    h_seconds.go_to(sec, false);
+    if (sec >= 0)
+        h_seconds.go_to(sec, false);
     h_minutes.go_to(min, false);
     h_hours.go_to_hour(hour, fraction, false);
     h_seconds.wait();
