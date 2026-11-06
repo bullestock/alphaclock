@@ -157,7 +157,8 @@ void Hand::go_to(int position,
         reverse = !reverse;
     }
     motor.go_to(target_motor_position, get_motor_delay(), !reverse);
-    motor.wait();
+    if (wait)
+        motor.wait();
     current_position = position;
 }
 
