@@ -485,6 +485,18 @@ struct
     struct arg_end* end;
 } home_args;
 
+int do_home(Hand *h)
+{
+    if (!h)
+        return 1;
+    printf("--- Homing\n");
+    if (h->home())
+        printf("OK: homed\n");
+    else
+        printf("FAIL\n");
+    return 0;
+}
+
 int home(int argc, char** argv)
 {
     int nerrors = arg_parse(argc, argv, (void**) &home_args);
@@ -493,16 +505,15 @@ int home(int argc, char** argv)
         arg_print_errors(stderr, home_args.end, argv[0]);
         return 1;
     }
-    Hand* h = get_hand(home_args.hand->sval[0]);
-    if (!h)
-        return 1;
-    printf("--- Homing\n");
-    if (h->home())
-        printf("OK: homed\n");
-    else
-        printf("FAIL\n");
+    if (home_args.hand->count == 0)
+    {
+        for (int hand = 0; hand < MOTOR_COUNT; ++hand)
+            if (do_home(&(get_hand(hand))))
+                break;
+        return 0;
+    }
 
-    return 0;
+    return do_home(get_hand(home_args.hand->sval[0]));
 }
 
 void initialize_console()
@@ -613,7 +624,7 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&hands_cmd));
 
-    home_args.hand = arg_str1(NULL, NULL, "<hand>", "Hand (h, m, s)");
+    home_args.hand = arg_str0(NULL, NULL, "<hand>", "Hand (h, m, s)");
     home_args.end = arg_end(2);
     const esp_console_cmd_t home_cmd = {
         .command = "home",
