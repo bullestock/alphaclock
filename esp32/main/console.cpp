@@ -180,6 +180,11 @@ static int hand(int argc, char** argv)
     if (hand_args.where->count > 0)
     {
         const auto where = hand_args.where->ival[0];
+        if (where < 0 || where > 59)
+        {
+            printf("ERROR: Invalid hand position\n");
+            return 1;
+        }
 
         h->get_motor().clear_sensor_activated_at();
         h->go_to(where);

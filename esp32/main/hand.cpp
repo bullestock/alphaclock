@@ -128,9 +128,15 @@ void Hand::go_to(int position,
     const int current_motor_position = motor.get_position();
     const bool debug_motor = get_motor_debug(motor.get_index());
     
+    bool reverse = false;
     int steps = target_motor_position - current_motor_position;
     if (!steps)
         return;
+    if (steps < 0)
+    {
+        steps = current_motor_position - target_motor_position;
+        reverse = true;
+    }
     
     if (debug_motor)
     {
@@ -141,30 +147,14 @@ void Hand::go_to(int position,
                current_motor_position, target_motor_position, position);
     }
 
-    bool reverse = steps < 0;
     if (debug_motor)
         printf("diff %d reverse %d\n", steps, reverse);
     if (std::abs(steps) > calibration.steps/2.0)
     {
-        // We are more than 180 degrees from the target - or are we?
-        const auto wrapped_target_motor_position = target_motor_position + calibration.steps;
-        const int wrapped_steps = wrapped_target_motor_position - current_motor_position;
-        if (std::abs(wrapped_steps) < std::abs(steps))
-        {
-            // It is faster to go the other way around
-            steps = wrapped_steps;
-            if (debug_motor)
-                printf("Wrapped: %d steps reverse %d\n", steps, reverse);
-        }
-        else
-        {
-            if (debug_motor)
-                printf("Forward: %d steps reverse %d\n", steps, reverse);
-            steps = std::round(calibration.steps - std::abs(steps));
-            reverse = !reverse;
-            if (debug_motor)
-                printf("Reverse: %d steps reverse %d\n", steps, reverse);
-        }
+        // We are more than 180 degrees from the target.
+        // It is faster to go the other way around.
+        printf("Going the other way\n");
+        reverse = !reverse;
     }
     motor.go_to(target_motor_position, get_motor_delay(), !reverse);
     motor.wait();
