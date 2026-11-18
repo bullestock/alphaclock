@@ -29,6 +29,7 @@ struct Data
     int current_position;
     int target_position;
     int sensor_activated_at;
+    bool last_sensor_state;
     // Copy of calibration data - set by Stepper::set_calibration()
     bool reverse;
     int max_steps;
@@ -165,12 +166,8 @@ static bool IRAM_ATTR timer_isr_callback(gptimer_handle_t,
     // Check homing sensors
     for (int motor = 0; motor < MOTOR_COUNT; ++motor)
     {
-        const bool activated = is_sensor_activated(motor);
-        if (motor_data[motor].current_position < SENSOR_ACTIVATION_COUNT)
-            ; //sensor_activated_at[motor] = -1;
-        else if (activated)
-            if (motor_data[motor].sensor_activated_at < 0)
-                motor_data[motor].sensor_activated_at = motor_data[motor].current_position;
+        const bool sensor_state = is_sensor_activated(motor);
+        // TODO
     }
 
     return false;
@@ -366,6 +363,8 @@ void Stepper::clear_sensor_activated_at()
 void Stepper::go_to(int position, uint64_t delay_us, bool forward)
 {
     auto& data = motor_data[motor];
+    if (position == motor_data[motor].current_position)
+        return;
     data.state = State::Idle;
     data.forward = forward;
     data.delay = delay_us;
