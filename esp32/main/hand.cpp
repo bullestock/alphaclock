@@ -27,6 +27,7 @@ bool Hand::home()
     // First make sure that sensor is not active
     if (is_sensor_activated(index))
     {
+        // The sensor is active, go backwards until it isn't
         ESP_LOGI(TAG, "ensure inactive");
         motor.start(false, 0);
         bool ok = false;
@@ -123,7 +124,8 @@ void Hand::go_to(int position,
 {
     // Compute new absolute position
     const auto& calibration = motor.get_calibration();
-    const int target_motor_position = Stepper::wrap(std::round(calibration.steps * (position - calibration.sensor_position) / 60.0),
+    const int target_motor_position = Stepper::wrap(std::round(calibration.steps *
+                                                               (position - calibration.sensor_home_position) / 60.0),
                                                     calibration.steps);
     const int current_motor_position = motor.get_position();
     const bool debug_motor = get_motor_debug(motor.get_index());
@@ -141,7 +143,7 @@ void Hand::go_to(int position,
     if (debug_motor)
     {
         printf("Motor %d: Go to %d (with sensor position %.1f)\n",
-               motor.get_index(), position, calibration.sensor_position);
+               motor.get_index(), position, calibration.sensor_home_position);
         printf("Moving motor %d (cal %.1f) from %d to %d (%d/60):\n",
                motor.get_index(), calibration.steps,
                current_motor_position, target_motor_position, position);

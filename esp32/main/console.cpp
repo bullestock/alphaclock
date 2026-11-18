@@ -243,6 +243,7 @@ static int hands(int argc, char** argv)
     return 0;
 }
 
+// TODO: This doesn't work anymore
 static int auto_calibrate(int motor)
 {
     printf("Calibrating motor %d...\n", motor);
@@ -252,32 +253,40 @@ static int auto_calibrate(int motor)
     printf("Start\n");
     const auto& calibration = get_calibration(h.get_motor().get_index());
     h.get_motor().start(!calibration.reverse, 1);
-    int first_activated_step_count = -1;
+    int first_activated_position = -1;
     bool sensor_deactivated = false;
     int i = 0;
+    int n = 0;
     while (i++ < 100000)
     {
         vTaskDelay(1);
+        if (++n > 1000)
+        {
+            n = 0;
+            printf("pos %d\n", h.get_motor().get_position());
+            // Restart to ensure motor does not get stuck
+            h.get_motor().start(!calibration.reverse, 1);
+        }
         if (is_sensor_activated(h.get_motor().get_index()))
         {
-            if (first_activated_step_count < 0)
+            if (first_activated_position < 0)
             {
-                first_activated_step_count = h.get_motor().get_step_count();
+                first_activated_position = h.get_motor().get_position();
             }
             else if (sensor_deactivated)
                 break;
         }
         else
         {
-            if (first_activated_step_count > 0)
+            if (first_activated_position > 0)
                 sensor_deactivated = true;
         }
     }
     h.get_motor().stop();
-    printf("First:  %d\n", first_activated_step_count);
-    const int second_activated_step_count = h.get_motor().get_step_count();
-    printf("Second: %d\n", second_activated_step_count);
-    printf("Steps:  %d\n", second_activated_step_count - first_activated_step_count);
+    printf("First:  %d\n", first_activated_position);
+    const int second_activated_position = h.get_motor().get_position();
+    printf("Second: %d\n", second_activated_position);
+    printf("Steps:  %d\n", second_activated_position - first_activated_position);
 
     return 0;
 }
@@ -287,7 +296,8 @@ struct
     struct arg_str* motor;
     struct arg_str* reverse;
     struct arg_str* steps;
-    struct arg_str* sensor_position;
+    struct arg_str* sensor_home_position;
+    struct arg_str* sensor_end_position;
     struct arg_end* end;
 } calibrate_args;
 
@@ -299,10 +309,11 @@ static int calibrate(int argc, char** argv)
         for (int i = 0; i < MOTOR_COUNT; ++i)
         {
             const auto& calibration = get_calibration(i);
-            printf("%d  %1d  %5.3f  %2.3f\n", i,
+            printf("%d  %1d  %5.3f  %2.3f  %d\n", i,
                    calibration.reverse,
                    calibration.steps,
-                   calibration.sensor_position);
+                   calibration.sensor_home_position,
+                   calibration.sensor_end_position);
         }
         return 0;
     }
@@ -351,7 +362,8 @@ static int calibrate(int argc, char** argv)
 
     if (calibrate_args.reverse->count < 1 ||
         calibrate_args.steps->count < 1 ||
-        calibrate_args.sensor_position->count < 1)
+        calibrate_args.sensor_home_position->count < 1 ||
+        calibrate_args.sensor_end_position->count < 1)
     {
         printf("ERROR: Missing argument(s)\n");
         return 1;
@@ -360,7 +372,8 @@ static int calibrate(int argc, char** argv)
     const auto& calibration = get_calibration(motor);
     auto reverse = calibration.reverse;
     auto steps = calibration.steps;
-    auto sensor_position = calibration.sensor_position;
+    auto sensor_home_position = calibration.sensor_home_position;
+    auto sensor_end_position = calibration.sensor_end_position;
 
     const auto reverse_s = calibrate_args.reverse->sval[0];
     if (strlen(reverse_s) && isdigit(reverse_s[0]))
@@ -370,11 +383,15 @@ static int calibrate(int argc, char** argv)
     if (strlen(steps_s) && isdigit(steps_s[0]))
         steps = atof(steps_s);
 
-    const auto sensor_position_s = calibrate_args.sensor_position->sval[0];
-    if (strlen(sensor_position_s) && isdigit(sensor_position_s[0]))
-        sensor_position = atof(sensor_position_s);
+    const auto sensor_home_position_s = calibrate_args.sensor_home_position->sval[0];
+    if (strlen(sensor_home_position_s) && isdigit(sensor_home_position_s[0]))
+        sensor_home_position = atof(sensor_home_position_s);
 
-    set_calibration(motor, reverse, steps, sensor_position);
+    const auto sensor_end_position_s = calibrate_args.sensor_end_position->sval[0];
+    if (strlen(sensor_end_position_s) && isdigit(sensor_end_position_s[0]))
+        sensor_end_position = atof(sensor_end_position_s);
+
+    set_calibration(motor, reverse, steps, sensor_home_position, sensor_end_position);
 
     printf("Done\n");
 
@@ -585,7 +602,8 @@ void run_console()
     calibrate_args.motor = arg_str1(NULL, NULL, "<motor>", "Motor (0, 1, 2, 0a, 1a, 2a, a)");
     calibrate_args.reverse = arg_str0(NULL, NULL, "<reverse>", "Reverse (0, 1)");
     calibrate_args.steps = arg_str0(NULL, NULL, "<steps>", "Steps needed for a complete rotation)");
-    calibrate_args.sensor_position = arg_str0(NULL, NULL, "<sensor_position>", "Sensor position (0-60))");
+    calibrate_args.sensor_home_position = arg_str0(NULL, NULL, "<sensor_home_position>", "Sensor home position (0-60))");
+    calibrate_args.sensor_end_position = arg_str0(NULL, NULL, "<sensor_end_position>", "Sensor end position (ticks))");
     calibrate_args.end = arg_end(2);
     const esp_console_cmd_t calibrate_cmd = {
         .command = "calibrate",
@@ -703,16 +721,7 @@ void run_console()
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&motor_debug_cmd));
 
-    const esp_console_cmd_t reboot_cmd = {
-        .command = "reboot",
-        .help = "Reboot",
-        .hint = nullptr,
-        .func = &reboot,
-        .argtable = nullptr,
-        .func_w_context = nullptr,
-        .context = nullptr
-    };
-    ESP_ERROR_CHECK(esp_console_cmd_register(&reboot_cmd));
+    REGISTER_CMD_NO_ARGS(reboot, "Reboot", reboot);
 
     const esp_console_cmd_t test_sensors_cmd = {
         .command = "sensors",
