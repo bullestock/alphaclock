@@ -12,6 +12,7 @@ constexpr const char* WIFI_KEY = "wifi";
 constexpr const char* CALIBRATION_KEY = "cal";
 constexpr const char* MOTOR_DEBUG_KEY = "mdb";
 constexpr const char* MOTOR_DELAY_KEY = "mde";
+constexpr const char* AUTO_RESET_KEY = "are";
 
 // Pin definitions
 constexpr const auto PIN_I2S_DATA = (gpio_num_t) 21;

@@ -34,6 +34,10 @@ void set_motor_debug(int motor, bool on);
 
 bool get_motor_debug(int motor);
 
+void set_auto_reset(bool on);
+
+bool get_auto_reset();
+
 // Local Variables:
 // compile-command: "cd .. && idf.py build"
 // End:

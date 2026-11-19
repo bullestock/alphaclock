@@ -33,8 +33,7 @@ public:
 
     const calibration_data& get_calibration() const;
 
-    void step(int nof_steps, uint64_t delay_us,
-              bool wait = false, bool debug = false);
+    void step(int nof_steps, uint64_t delay_us);
 
     void start(bool forward, uint64_t delay_us);
 
@@ -53,9 +52,9 @@ public:
     int get_position() const;
 
     /// Get absolute position at which the homing sensor was activated.
-    int get_sensor_activated_at() const;
+    int get_last_position_adjustment() const;
 
-    void clear_sensor_activated_at();
+    void clear_last_position_adjustment();
 
     /// Go to the specified absolute position.
     void go_to(int position, uint64_t delay_us, bool forward);

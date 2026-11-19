@@ -14,6 +14,8 @@ static calibration_data calibration[MOTOR_COUNT];
 
 static bool motor_debug[MOTOR_COUNT];
 
+static bool auto_reset;
+
 static int motor_delay;
 
 void clear_wifi_credentials()
@@ -131,6 +133,22 @@ void set_motor_debug(int motor, bool on)
 bool get_motor_debug(int motor)
 {
     return motor_debug[motor];
+}
+
+void set_auto_reset(bool on)
+{
+    auto_reset = on;
+    nvs_handle my_handle;
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &my_handle));
+    ESP_ERROR_CHECK(nvs_set_u8(my_handle, AUTO_RESET_KEY,
+                               auto_reset));
+    ESP_ERROR_CHECK(nvs_commit(my_handle));
+    nvs_close(my_handle);
+}
+
+bool get_auto_reset()
+{
+    return auto_reset;
 }
 
 void init_nvs()

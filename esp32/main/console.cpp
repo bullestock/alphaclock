@@ -127,7 +127,7 @@ static int test_motor_step(int argc, char** argv)
         printf("Stepping motor %d at %d us: %d\n",
                motor, delay, steps);
 
-        get_motor(motor)->step(steps, delay, true, true);
+        get_motor(motor)->step(steps, delay);
     }
     printf("Done\n");
 
@@ -186,12 +186,12 @@ static int hand(int argc, char** argv)
             return 1;
         }
 
-        h->get_motor().clear_sensor_activated_at();
+        h->get_motor().clear_last_position_adjustment();
         h->go_to(where);
         
-        printf("Done - absolute position %d, sensor activated at %d\n",
+        printf("Done - absolute position %d, position adjustment at %d\n",
                h->get_motor().get_position(),
-               h->get_motor().get_sensor_activated_at());
+               h->get_motor().get_last_position_adjustment());
         return 0;
     }
     // No <where> specified, do a full revolution
@@ -452,6 +452,30 @@ int motor_debug(int argc, char** argv)
     }
     set_motor_debug(motor, motor_debug_args.on->ival[0]);
     printf("Motor %d debug set to %d\n", motor, get_motor_debug(motor));
+    return 0;
+}
+
+struct
+{
+    struct arg_int* on;
+    struct arg_end* end;
+} auto_reset_args;
+
+int auto_reset(int argc, char** argv)
+{
+    if (argc <= 1)
+    {
+        printf("Motor auto reset: %d\n", get_auto_reset());
+        return 0;
+    }
+    int nerrors = arg_parse(argc, argv, (void**) &auto_reset_args);
+    if (nerrors != 0)
+    {
+        arg_print_errors(stderr, auto_reset_args.end, argv[0]);
+        return 1;
+    }
+    set_auto_reset(auto_reset_args.on->ival[0]);
+    printf("Motor auto reset set to %d\n", get_auto_reset());
     return 0;
 }
 
@@ -720,6 +744,19 @@ void run_console()
         .context = nullptr
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&motor_debug_cmd));
+
+    auto_reset_args.on = arg_int1(NULL, NULL, "<on>", "On (0-1)");
+    auto_reset_args.end = arg_end(2);
+    const esp_console_cmd_t auto_reset_cmd = {
+        .command = "autoreset",
+        .help = "Automatic reset of zero position",
+        .hint = nullptr,
+        .func = &auto_reset,
+        .argtable = &auto_reset_args,
+        .func_w_context = nullptr,
+        .context = nullptr
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&auto_reset_cmd));
 
     REGISTER_CMD_NO_ARGS(reboot, "Reboot", reboot);
 
